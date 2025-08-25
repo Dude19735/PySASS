@@ -1,0 +1,54 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.in
+*.app
+
+/.vscode/*
+/__pycache__/*
+/py_cubin_analysis/__pycache__/*
+/build/*
+*.orig
+*.pickle
+*.json
+*.rename
+*.zlib
+*.s
+*.hex
+*.html
+__auto_generated_*
+__install_log_*
+*.autogen.*
+/py_sass/py_sass.egg-info/*
+/dist/*
+
+# remove this at some point
+*.typed

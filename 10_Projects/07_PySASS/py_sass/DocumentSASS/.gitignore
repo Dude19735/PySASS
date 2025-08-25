@@ -1,0 +1,5 @@
+*.json
+*.in
+*.md
+*.pickle
+*.rename

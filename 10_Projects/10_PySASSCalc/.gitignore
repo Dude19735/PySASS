@@ -1,0 +1,54 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.in
+*.app
+
+/__pycache__/*
+/py_sass_calc/__pycache__/*
+/legacy/__pycache__/*
+/cpp_ext/__pycache__/*
+/py_sass_calc/test/*
+/build/*
+/py_sass_calc/DocumentSASS/*.log
+/py_sass_calc/sm_expr_vals/*.log
+*.orig
+*.pickle
+/py_sass_calc/DocumentSASS/*.json
+*.rename
+*.zlib
+*.s
+__auto_generated_*
+__install_log_*
+*.autogen.*
+
+# remove this at some point
+*.typed

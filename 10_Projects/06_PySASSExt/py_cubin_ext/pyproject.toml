@@ -1,0 +1,31 @@
+[build-system]
+requires = ["scikit-build-core >=0.4.3", "nanobind >=2.0.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "py_cubin_ext"
+version = "0.0.1"
+description = "Open and create CUDA binary."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    { name = "Dumeni Manatschal", email = "dumenim@ethz.ch" },
+]
+classifiers = [
+    "License :: MIT",
+]
+# Optional: runtime dependency specification
+# dependencies = [  ]
+
+[project.urls]
+Homepage = ""
+
+[tool.scikit-build]
+# Protect the configuration against future changes in scikit-build-core
+minimum-version = "0.4"
+
+# Setuptools-style build caching in a local directory
+build-dir = "build/{wheel_tag}"
+
+# Build stable ABI wheels for CPython 3.12+
+wheel.py-api = "cp312"

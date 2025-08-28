@@ -6,7 +6,12 @@ from py_sass_ext import TT_Default, TT_NoDefault
 from py_sass_ext import TT_FuncArg, TT_Func
 from py_sass_ext import TT_Reg
 from py_sass_ext import TT_ICode
+from py_sass_ext import TT_Ext
+from py_sass_ext import TT_Param
+from py_sass_ext import TT_CashComponent, TT_OpCashQuestion, TT_OpCashAnd, TT_OpCashAssign
+from py_sass_ext import TT_Cash
 
+import time
 
 a = TT_Alias("hello")
 
@@ -73,5 +78,20 @@ icode = TT_ICode("1010", [12, 13, 14, 15], [1,0,1,0])
 dx = pickle.dumps(icode)
 dr = pickle.loads(dx)
 print(icode, dr)
+
+ext = TT_Ext("test_class", a, reg, default, False)
+dx = pickle.dumps(ext)
+dr = pickle.loads(dx)
+print(ext, dr)
+
+param = TT_Param("test_class", a, [op1], reg, [ext], False, False)
+dx = pickle.dumps(param)
+dr = pickle.loads(dx)
+print(param, dr)
+
+cash = TT_Cash("bla_class", [c1, c2, param, c3], False)
+dx = pickle.dumps(cash)
+dr = pickle.loads(dx)
+print(cash, dr)
 
 pass

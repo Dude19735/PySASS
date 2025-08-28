@@ -142,6 +142,24 @@ int main(int argc, char** argv) {
         auto xb = SASS::Pickle::dumps(f.get_state());
         auto xs = SASS::Pickle::loads<SASS::TT_ICode_State>(xb);
     }
+    {
+        auto reg = SASS::TT_Reg("ccc", 0, x6, {{"R1", {1}}, {"R2", {2}}}, x);
+        auto ext = SASS::TT_Ext("blabla", x, reg, x6, false);
+        auto param = SASS::TT_Param("blaaaaa", x, {SASS::TT_OpAtAbs("Pg")}, reg, {ext}, false, false);
+        auto f = SASS::TT_Cash("1010", {SASS::TT_OpCashAnd(), SASS::TT_OpCashAssign(), param , SASS::TT_OpCashQuestion()});
+
+        auto xb = SASS::Pickle::dumps(f.get_state());
+        SASS::TT_Cash_State xs = SASS::Pickle::loads<SASS::TT_Cash_State>(xb);
+
+        SASS::TT_Cash_State_0 state0 = std::get<SASS::TT_Cash_State_0>(xs);
+        std::string class_name = std::get<0>(state0);
+        SASS::TCashStateVec cash_state_vec = std::get<1>(state0);
+        SASS::TCashVec cash_vec = SASS::TT_Cash::muvh<SASS::TCashType, SASS::TCashStateType, SASS::cash_type_size>(cash_state_vec);
+        bool added_later = std::get<2>(state0);
+        std::cout << f.__str__() << std::endl;
+        auto f2 = SASS::TT_Cash(class_name, cash_vec, added_later);
+        std::cout << f2.__str__() << std::endl;
+    }
 
     // auto f2 = SASS::TT_Func("hellooooooooooooooooooooooooooooooo", "SImm", {}, SASS::TT_FuncArg(5, false, false, 5, false, 0, false, 0), false, false, SASS::TT_Alias(std::string("hwllo world")));
     // auto t = std::make_tuple<SASS::TT_Func>(std::move(f));

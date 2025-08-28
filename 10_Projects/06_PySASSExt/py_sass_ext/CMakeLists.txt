@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.22)
 
 set(MODULE_NAME_1 "_sass_values")
-set(MODULE_NAME_2 "_cpp_faster")
+set(MODULE_NAME_2 "_cpp")
 set(PROJECT_NAME "py_sass_ext")
 project (${PROJECT_NAME} LANGUAGES CXX)
 
@@ -42,7 +42,7 @@ if (NOT SKBUILD)
   add_executable(mod2_test tests/mod2_tests.cpp)
   target_compile_definitions(mod2_test PRIVATE $<$<CONFIG:Debug>:_DEBUG=1>) # this actually works (adds _DEBUG=1 if the setting is debug mode)
   target_include_directories(mod2_test PRIVATE Python)
-  target_include_directories(mod2_test PRIVATE external/nanobind/include)
+  target_include_directories(mod2_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../nanobind/include)
 
   add_executable(so src/so.cpp)
   target_compile_definitions(so PRIVATE $<$<CONFIG:Debug>:_DEBUG=1>) # this actually works (adds _DEBUG=1 if the setting is debug mode)
@@ -51,7 +51,7 @@ if (NOT SKBUILD)
   add_executable(enc_dom tests/enc_dom.cpp external/lz4/lz4.cpp)
   target_compile_definitions(enc_dom PRIVATE $<$<CONFIG:Debug>:_DEBUG=1>) # this actually works (adds _DEBUG=1 if the setting is debug mode)
   target_include_directories(enc_dom PRIVATE Python)
-  target_include_directories(enc_dom PRIVATE external/nanobind/include)
+  target_include_directories(enc_dom PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../nanobind/include)
   target_link_libraries(enc_dom PRIVATE OpenMP::OpenMP_CXX)
 
   nanobind_add_module("${MODULE_NAME_1}" NOMINSIZE LTO src/module_main_1.cpp external/lz4/lz4.cpp)

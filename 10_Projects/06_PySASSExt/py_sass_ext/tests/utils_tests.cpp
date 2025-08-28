@@ -160,6 +160,43 @@ int main(int argc, char** argv) {
         auto f2 = SASS::TT_Cash(class_name, cash_vec, added_later);
         std::cout << f2.__str__() << std::endl;
     }
+    {
+        auto alias = SASS::TT_Alias(std::string("hello"));
+        auto reg = SASS::TT_Reg("ccc", 0, x6, {{"R1", {1}}, {"R2", {2}}}, x);
+        auto func = SASS::TT_Func("hello", "SImm", {"SImm", "UImm", "F64Imm"}, func_arg, false, false, x);
+        auto ext = SASS::TT_Ext("blabla", x, reg, x6, false);
+        auto param1 = SASS::TT_Param("param1", x, {SASS::TT_OpAtAbs("Pg")}, reg, {ext}, false, false);
+        auto param2 = SASS::TT_Param("param2", x, {SASS::TT_OpAtNegate("Pg")}, func, {ext}, false, false);
+        auto ops_vec = SASS::TOpsVec{ SASS::TT_OpAtNot("lol"), SASS::TT_OpAtAbs("lol"), SASS::TT_OpAtInvert("lol") };
+        auto params = SASS::TParamVec {param1, param2};
+        auto list = SASS::TT_List("classeli", params, SASS::TExtVec{ ext });
+
+        auto xb = SASS::Pickle::dumps(list.get_state());
+        SASS::TT_List_State xs = SASS::Pickle::loads<SASS::TT_List_State>(xb);
+        std::cout << list.__str__() << std::endl;
+    }
+    {
+        auto alias = SASS::TT_Alias(std::string("hello"));
+        auto reg = SASS::TT_Reg("ccc", 0, x6, {{"R1", {1}}, {"R2", {2}}}, x);
+        auto func = SASS::TT_Func("hello", "SImm", {"SImm", "UImm", "F64Imm"}, func_arg, false, false, x);
+        auto ext1 = SASS::TT_Ext("ext1", x, reg, x6, false);
+        auto ext2 = SASS::TT_Ext("ext2", x, reg, x6, false);
+        auto param1 = SASS::TT_Param("param1", x, {SASS::TT_OpAtAbs("Pg")}, reg, {ext1}, false, false);
+        auto param2 = SASS::TT_Param("param2", x, {SASS::TT_OpAtNegate("Pg")}, func, {ext2}, false, false);
+        auto param3 = SASS::TT_Param("param2", x, {SASS::TT_OpAtNot("pp")}, reg, {ext1}, false, false);
+
+        auto ops_vec = SASS::TOpsVec{ SASS::TT_OpAtNot("lol"), SASS::TT_OpAtAbs("lol"), SASS::TT_OpAtInvert("lol") };
+        auto params1 = SASS::TParamVec {param1, param2};
+        auto params2 = SASS::TParamVec {param3};
+        auto list1 = SASS::TT_List("classeli_1", params1, SASS::TExtVec{ ext1 });
+        auto list2 = SASS::TT_List("classeli_2", params2, SASS::TExtVec{ ext2 });
+
+        auto attr = SASS::TT_AttrParam("param_classeli", alias, ops_vec, reg, {list1, list2}, { ext1, ext2 }, false, false);
+
+        auto xb = SASS::Pickle::dumps(attr.get_state());
+        SASS::TT_AttrParam_State xs = SASS::Pickle::loads<SASS::TT_AttrParam_State>(xb);
+        std::cout << attr.__str__() << std::endl;
+    }
 
     // auto f2 = SASS::TT_Func("hellooooooooooooooooooooooooooooooo", "SImm", {}, SASS::TT_FuncArg(5, false, false, 5, false, 0, false, 0), false, false, SASS::TT_Alias(std::string("hwllo world")));
     // auto t = std::make_tuple<SASS::TT_Func>(std::move(f));

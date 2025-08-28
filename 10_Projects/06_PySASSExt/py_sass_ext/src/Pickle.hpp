@@ -66,32 +66,6 @@ namespace SASS {
     template <typename T>
     concept IsString = std::same_as<T, std::string>;
 
-    // // Primary template: defaults to false
-    // template <typename T>
-    // struct is_int_set : std::false_type {};
-    // // Partial specialization for std::set
-    // template <int, typename Compare, typename Alloc>
-    // struct is_int_set<std::set<int, Compare, Alloc>> : std::true_type {};
-    // // Helper variable template
-    // template <typename T>
-    // inline constexpr bool is_int_set_v = is_int_set<T>::value;
-    // // C++20 Concept version
-    // template <typename T>
-    // concept IntSet = is_int_set_v<T>;
-
-    // // Primary template: defaults to false
-    // template <typename T>
-    // struct is_str_set : std::false_type {};
-    // // Partial specialization for std::set
-    // template <std::string, typename Compare, typename Alloc>
-    // struct is_str_set<std::set<std::string, Compare, Alloc>> : std::true_type {};
-    // // Helper variable template
-    // template <typename T>
-    // inline constexpr bool is_str_set = is_str_set<T>::value;
-    // // C++20 Concept version
-    // template <typename T>
-    // concept StrSet = is_str_set<T>;
-
     template<typename T>
     struct is_variant : std::false_type {};
     template<typename... Ts>

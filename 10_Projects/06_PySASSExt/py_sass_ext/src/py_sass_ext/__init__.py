@@ -8,5 +8,5 @@
 # from ._sass_values import StrVector
 # from ._sass_values import FixedPickVector
 
-# from ._cpp_faster import CPP_Faster
+from ._cpp import *
 from ._sass_values import *

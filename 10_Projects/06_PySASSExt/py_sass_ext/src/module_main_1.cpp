@@ -61,6 +61,9 @@ NB_MODULE(_sass_values, m) {
     nb::bind_vector<StrVector>(m, "StrVector");
     nb::bind_vector<FixedPickVector>(m, "FixedPickVector");
     nb::bind_vector<std::vector<std::string>>(m, "AliasVector");
+    nb::bind_vector<std::vector<SASS::TT_Ext>>(m, "ExtVector");
+    nb::bind_vector<std::vector<SASS::TT_AtOp>>(m, "OpVector");
+    nb::bind_vector<SASS::TCashVec>(m, "CashVector");
 
     nb::class_<SASS::SASS_Bits>(m, "SASS_Bits")
     .def(nb::init<const BitVector&, int, bool>(),
@@ -683,9 +686,11 @@ NB_MODULE(_sass_values, m) {
     .def(nb::init<std::string, SASS::TT_Alias, SASS::TOpsVec, SASS::TT_Reg, SASS::TListVec, SASS::TExtVec, bool, bool>(), nb::arg("class_name"), nb::arg("alias"), nb::arg("ops"), nb::arg("value"), nb::arg("attr"), nb::arg("extensions"), nb::arg("is_at_alias"), nb::arg("has_attr_star"))
     .def(nb::init<std::string, SASS::TT_Alias, SASS::TOpsVec, SASS::TT_Func, SASS::TListVec, SASS::TExtVec, bool, bool>(), nb::arg("class_name"), nb::arg("alias"), nb::arg("ops"), nb::arg("value"), nb::arg("attr"), nb::arg("extensions"), nb::arg("is_at_alias"), nb::arg("has_attr_star"));
 
-    // nb::class_<SASS::TT_Cash>(m, "TT_Cash")
-    // .def(nb::init<std::string, SASS::TCashVec, bool>(), nb::arg("class_name"), nb::arg("cash_vals"), nb::arg("added_later")=false)
-    // .def("__str__", &SASS::TT_Cash::__str__)
-    // .def_prop_ro("values", &SASS::TT_Cash::values)
-    // .def("get_enc_alias", &SASS::TT_Cash::get_enc_alias);
+    nb::class_<SASS::TT_Cash>(m, "TT_Cash")
+    .def(nb::init<std::string, SASS::TCashVec, bool>(), nb::arg("class_name"), nb::arg("cash_vals"), nb::arg("added_later")=false)
+    .def("__str__", &SASS::TT_Cash::__str__)
+    .def_prop_ro("values", &SASS::TT_Cash::values)
+    .def("get_enc_alias", &SASS::TT_Cash::get_enc_alias)
+    .def("__getstate__", &SASS::TT_Cash::__getstate__ )
+    .def("__setstate__", &SASS::TT_Cash::__setstate__ );
 }

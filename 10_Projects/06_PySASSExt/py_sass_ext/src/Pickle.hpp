@@ -245,20 +245,39 @@ namespace SASS {
         }
 
     public:
+        template<typename ..._TArgs>
+        static TVec transform_2_vector(const std::tuple<_TArgs...>& tuple)
+        {
+            TVecPair res = to_bytes(tuple);
+            return res.second;
+        }
+
+        template<typename TNum> requires(std::is_integral_v<TNum> || std::is_floating_point_v<TNum>)
+        static TVec transform_2_vector(const TNum& nn)
+        {
+            TVecPair res = to_bytes(nn);
+            return res.second;
+        }
+
+        static TVec transform_2_vector(const std::string& nn)
+        {
+            TVecPair res = to_bytes(nn);
+            return res.second;
+        }
+
+        template<typename TVariant> requires (IsVariant<TVariant>)
+        static TVec transform_2_vector(const TVariant& variant)
+        {
+            return variant_to_vec(variant);
+        }
+
         template<typename ...TStateTuple>
         static TVec variant_to_vec(const std::variant<TStateTuple...>& state) {
             size_t index = state.index();
             TVec res = { static_cast<uint8_t>(index) };
-            TVec data = std::visit([&](const auto& k) { return ToBytes::tuple_2_vector(k); }, state);
+            TVec data = std::visit([&](const auto& k) { return ToBytes::transform_2_vector(k); }, state);
             res.insert(res.end(), data.begin(), data.end());
             return res;
-        }
-
-        template<typename ..._TArgs>
-        static TVec tuple_2_vector(const std::tuple<_TArgs...>& tuple)
-        {
-            TVecPair res = to_bytes(tuple);
-            return res.second;
         }
 
         template<typename ..._TArgs>
@@ -395,11 +414,23 @@ namespace SASS {
             if constexpr (I >= std::variant_size_v<Var>) { 
                 throw std::out_of_range("Invalid variant index: out of bounds");
             } else {
-                if (I == variant_index) return ToData::unpack_args<std::variant_alternative_t<I, Var>>::vector_2_tuple(bytes);
+                if (I == variant_index) {
+                    using TCurVar = std::variant_alternative_t<I, Var>;
+                    if constexpr (IsVariant<TCurVar>){
+                        return unpack_variant<0, TCurVar>(static_cast<size_t>(bytes[0]), TSpan(bytes.begin()+1, bytes.end()));
+                    }
+                    else if constexpr (IsTuple<TCurVar>) {
+                        return ToData::unpack_args<TCurVar>::vector_2_tuple(bytes);
+                    }
+                    else {
+                        const std::vector<TSize> ssize = { 0 };
+                        return to_data<TCurVar>(0, ssize, bytes);
+                    }
+                }
                 else return unpack_variant<I + 1, Var>(variant_index, bytes);
             }
             throw std::runtime_error("This point should never be reached: faulty recursion!");
-            return ToData::unpack_args<std::variant_alternative_t<0, Var>>::vector_2_tuple(bytes);
+            return Var();
         }
 
         template <typename Tuple>
@@ -503,27 +534,104 @@ namespace SASS {
 
     template<typename T, typename TState, size_t tt_state_size>
     class Picklable {
-        template <typename Tuple>
-        struct unpack_args;
-        template<typename ..._TArgs>
-        struct unpack_args<std::tuple<_TArgs...>> {
+        template <typename TOut, typename Tuple>
+        struct tunpack_args;
+        template<typename TOut, typename ..._TArgs>
+        struct tunpack_args<TOut, std::tuple<_TArgs...>> {
             template<typename Ts, Ts... I>
-            static T args_to_obj(const std::tuple<_TArgs...>& args, const std::integer_sequence<Ts, I...>& int_seq){
-                return T(std::get<I>(args)...);
+            static TOut targs_to_obj(const std::tuple<_TArgs...>& args, const std::integer_sequence<Ts, I...>& int_seq){
+                return TOut(std::get<I>(args)...);
             }
         };
 
-        template <std::size_t I = 0>
-        static constexpr T unpack_state_variant(std::size_t variant_index, const TState& state) {
-            if constexpr (I >= std::variant_size_v<TState>) { 
+        template <typename TOut, typename TStateVariantIn, std::size_t I = 0>
+        static constexpr TOut _tunpack_state_variant(std::size_t variant_index, const TStateVariantIn& state) {
+            if constexpr (I >= std::variant_size_v<TStateVariantIn>) { 
                 throw std::out_of_range("Invalid variant index: out of bounds");
             } else {
-                if (I == variant_index) return unpack_args<std::variant_alternative_t<I, TState>>::args_to_obj(std::get<I>(state), std::make_index_sequence<tt_state_size>{});
-                else return unpack_state_variant<I + 1>(variant_index, state);
+                if (I == variant_index) {
+                    using TCurState = std::variant_alternative_t<I, TStateVariantIn>;
+                    static_assert(IsTuple<TCurState>);
+                    constexpr size_t state_size = std::tuple_size_v<TCurState>;
+                    return tunpack_args<TOut, TCurState>::targs_to_obj(std::get<TCurState>(state), std::make_index_sequence<state_size>{});
+                }
+                else return _tunpack_state_variant<TOut, TStateVariantIn, I + 1>(variant_index, state);
             }
             throw std::runtime_error("This point should never be reached: faulty recursion!");
-            return unpack_args<std::variant_alternative_t<0, TState>>::args_to_obj(std::get<0>(state), std::make_index_sequence<tt_state_size>{});
+            using TCurState = std::variant_alternative_t<0, TStateVariantIn>;
+            static_assert(IsTuple<TCurState>);
+            constexpr size_t state_size = std::tuple_size_v<TCurState>;
+            return tunpack_args<TOut, TCurState>::targs_to_obj(std::get<TCurState>(state), std::make_index_sequence<state_size>{});
         }
+
+        template <typename TVInState, typename TVOutReal, std::size_t I = 0, size_t variant_type_size>  requires (IsVariant<TVInState> && IsVariant<TVOutReal>)
+        static constexpr TVOutReal _tunpack_variant(std::size_t variant_index, const TVInState& state) {
+            if constexpr (I >= variant_type_size) { 
+                throw std::out_of_range("Invalid variant index: out of bounds");
+            } else {
+                if (I == variant_index) {
+                    using TCurState = std::variant_alternative_t<I, TVInState>;
+                    using TCurReal = std::variant_alternative_t<I, TVOutReal>;
+                    TCurState var = std::get<TCurState>(state);
+
+                    if constexpr (IsVariant<TCurState>){
+                        if constexpr (IsVariant<TCurReal>) {
+                            throw std::runtime_error("Invalid variant contents: the state is always an std::variant, but one entry in a state has to be transferable to a real type. The real type is not allowed to be an std::variant again!");
+                        }
+                        else if constexpr (!IsVariant<TCurReal>){
+                            return _tunpack_state_variant<TCurReal, TCurState, 0>(var.index(), var);
+                        }
+                        else throw std::runtime_error("Invalid variant contents: should be an std::variant for the state and a real type for the other one!");
+                    }
+                    else if constexpr (IsTuple<TCurState>) {
+                        static_assert(!IsVariant<TCurReal>);
+                        constexpr size_t state_size = std::tuple_size_v<TCurState>;
+                        return tunpack_args<TCurReal, TCurState>::targs_to_obj(std::get<TCurState>(state), std::make_index_sequence<state_size>{});
+                    }
+                    throw std::runtime_error("Invalid variant contents: should be either an std::variant or an std:.tuple");
+                    // return std::tuple<>();
+                    return TVOutReal();
+                }
+                else return _tunpack_variant<TVInState, TVOutReal, I + 1, variant_type_size>(variant_index, state);
+            }
+            throw std::runtime_error("This point should never be reached: faulty recursion!");
+            return TVOutReal();
+        }
+
+        template <typename TVInReal, typename TVOutState, std::size_t I = 0, size_t variant_type_size>  requires (IsVariant<TVInReal> && IsVariant<TVOutState>)
+        static constexpr TVOutState _tpack_variant(std::size_t variant_index, const TVInReal& real_obj) {
+            if constexpr (I >= variant_type_size) { 
+                throw std::out_of_range("Invalid variant index: out of bounds");
+            } else {
+                if (I == variant_index) {
+                    using TCurState = std::variant_alternative_t<I, TVOutState>;
+                    using TCurReal = std::variant_alternative_t<I, TVInReal>;
+                    TCurReal var = std::get<TCurReal>(real_obj);
+
+                    if constexpr (IsVariant<TCurState>){
+                        if constexpr (IsVariant<TCurReal>) {
+                            throw std::runtime_error("Invalid variant contents: the state is always an std::variant, but one entry in a state has to be transferable to a real type. The real type is not allowed to be an std::variant again!");
+                        }
+                        else if constexpr (!IsVariant<TCurReal>){
+                            return var.get_state(); // _tunpack_state_variant<TCurReal, TCurState, std::variant_size_v<TCurState>>(var.index(), var);
+                        }
+                        else {
+                            throw std::runtime_error("Invalid variant contents: should be an std::variant for the state and a real type for the other one!");
+                        }
+                    }
+                    else if constexpr (IsTuple<TCurState>) {
+                        throw std::runtime_error("Invalid variant contents: should be an std::variant for the state and a real type for the other one!");
+                    }
+                    
+                    throw std::runtime_error("Invalid variant contents: should be either an std::variant or an std:.tuple");
+                    return TVOutState();
+                }
+                else return _tpack_variant<TVInReal, TVOutState, I + 1, variant_type_size>(variant_index, real_obj);
+            }
+            throw std::runtime_error("This point should never be reached: faulty recursion!");
+            return TVOutState();
+        }
+
     public:
         virtual const TState get_state(T* selfp=nullptr) const = 0;
 
@@ -533,10 +641,35 @@ namespace SASS {
             std::transform(state_vec.begin(), state_vec.end(), std::back_inserter(vec), [&](const TState& state) { return muh(state); });
             return vec;
         }
+        
         static std::vector<TState> to_state_vec(const std::vector<T>& vec) {
             std::vector<TState> state_vec;
             state_vec.reserve(vec.size());
             std::transform(vec.begin(), vec.end(), std::back_inserter(state_vec), [&](const T& ext) { return ext.get_state(); });
+            return state_vec;
+        }
+        
+        template<typename TVReal, typename TVState, size_t variant_type_size> requires (IsVariant<TVReal> && IsVariant<TVState>)
+        static std::vector<TVReal> muvh(const std::vector<TVState>& state_vec) {
+            std::vector<TVReal> vec; 
+            vec.reserve(state_vec.size());
+            std::transform(state_vec.begin(), state_vec.end(), std::back_inserter(vec), 
+                [&](const TVState& state) { 
+                    return _tunpack_variant<TVState, TVReal, 0, variant_type_size>(static_cast<size_t>(state.index()), state); 
+                }
+            );
+            return vec;
+        }
+
+        template<typename TVState, typename TVReal, size_t variant_type_size> requires (IsVariant<TVReal> && IsVariant<TVState>)
+        static std::vector<TVState> mpvh(const std::vector<TVReal>& vec) {
+            std::vector<TVState> state_vec; 
+            state_vec.reserve(vec.size());
+            std::transform(vec.begin(), vec.end(), std::back_inserter(state_vec), 
+                [&](const TVReal& real_obj) { 
+                    return _tpack_variant<TVReal, TVState, 0, variant_type_size>(static_cast<size_t>(real_obj.index()), real_obj); 
+                }
+            );
             return state_vec;
         }
         
@@ -548,7 +681,7 @@ namespace SASS {
         }
 
         static T muh(const TState& state){ 
-            return unpack_state_variant<0>(static_cast<size_t>(state.index()), state);
+            return _tunpack_state_variant<T, TState, 0>(static_cast<size_t>(state.index()), state);
         }
 
         static const BitVector __getstate__(const T& self) { return Pickle::dumps(self.get_state()); }

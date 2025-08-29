@@ -27,22 +27,8 @@ namespace SASS {
     // = Token Properties ===============================================================================================
     // ==================================================================================================================
 
-    class _TT_HasClassName {
-        std::string _class_name;
-    public:
-        _TT_HasClassName(const std::string& class_name) noexcept : _class_name(class_name) {}
-        _TT_HasClassName(const _TT_HasClassName& other) noexcept : _class_name(other._class_name) {}
-        _TT_HasClassName(_TT_HasClassName&& other) noexcept : _class_name(std::move(other._class_name)) {}
-        _TT_HasClassName& operator=(const _TT_HasClassName& other) noexcept { if(this == &other) return *this; _class_name = other._class_name; return *this; }
-        _TT_HasClassName& operator=(_TT_HasClassName&& other) noexcept { if(this == &other) return *this; _class_name = std::move(other._class_name); return *this; }
-        bool operator==(const _TT_HasClassName& other) const noexcept { if(this == &other) return true; return (_class_name.compare(other._class_name) == 0); }
-        std::string class_name() const noexcept { return _class_name; }
-    };
-
-    class _TT_IsPrintable {
-    public:
-        virtual std::string __str__() const = 0;
-    };
+    class _TT_IsPrintable { public: virtual std::string __str__() const = 0; };
+    class _TT_QueriableAlias { public: virtual std::vector<std::string> get_enc_alias() const noexcept = 0; };
 
     /// @brief Most basic token class: all of them are one of these too.
     class _TT_Base : public _TT_IsPrintable{
@@ -69,18 +55,16 @@ namespace SASS {
         virtual TDomain get_domain(const TToLimit& to_limit = {}, bool filter_invalid = false) const = 0;
     };
 
-    class _TT_Assemblable : public _TT_Domain, public _TT_HasClassName {
+    class _TT_Assemblable : public _TT_Domain {
     public:
-        _TT_Assemblable(const std::string& class_name, const TValue& value) noexcept : _TT_Domain(value), _TT_HasClassName(class_name) {}
-        _TT_Assemblable(const _TT_Assemblable& other) noexcept : _TT_Domain(other), _TT_HasClassName(other) {}
-        _TT_Assemblable(_TT_Assemblable&& other) noexcept : _TT_Domain(other), _TT_HasClassName(other) {}
-        _TT_Assemblable& operator=(const _TT_Assemblable& other)  noexcept{ if(this == &other) return *this; _TT_Domain::operator=(other); _TT_HasClassName::operator=(other); return *this;}
-        _TT_Assemblable& operator=(_TT_Assemblable&& other) noexcept { if(this == &other) return *this; _TT_Domain::operator=(other); _TT_HasClassName::operator=(other); return *this;}
-        bool operator==(const _TT_Assemblable& other) const noexcept { if(this == &other) return true; return (_TT_Domain::operator==(other) && _TT_HasClassName::operator==(other)); }
+        _TT_Assemblable(const TValue& value) noexcept : _TT_Domain(value) {}
+        _TT_Assemblable(const _TT_Assemblable& other) noexcept : _TT_Domain(other) {}
+        _TT_Assemblable(_TT_Assemblable&& other) noexcept : _TT_Domain(other) {}
+        _TT_Assemblable& operator=(const _TT_Assemblable& other)  noexcept{ if(this == &other) return *this; _TT_Domain::operator=(other); return *this;}
+        _TT_Assemblable& operator=(_TT_Assemblable&& other) noexcept { if(this == &other) return *this; _TT_Domain::operator=(other); return *this;}
+        bool operator==(const _TT_Assemblable& other) const noexcept { if(this == &other) return true; return (_TT_Domain::operator==(other)); }
         virtual SASS_Bits sass_from_bits(const BitVector& bits) const = 0;
     };
-
-    class _TT_QueriableAlias { public: virtual std::vector<std::string> get_enc_alias() const noexcept = 0; };
 
     // ==================================================================================================================
     // = Token Implementations ==========================================================================================
@@ -103,28 +87,32 @@ namespace SASS {
 
     class _TT_WithAlias { public: virtual const TT_Alias& alias() const noexcept = 0; };
 
+
     /// @brief Base class for all @op classes.
     /// AtOps are the things in front of operands, like the [-] before [-]Register:Ra.
     /// The eval_value for this one is {1,0} where 1==operation_is_there, 0==no_operation
-    using TT_AtOp_State_0 = std::tuple<std::string, std::string, std::string>;
+    enum class AtOp { Not, Negate, Abs, Sign, Invert };
+    using TT_AtOp_State_0 = std::tuple<std::string, std::string, std::string, uint8_t>;
     using TT_AtOp_State = std::variant<TT_AtOp_State_0>;
     constexpr size_t tt_atop_state_size = std::tuple_size<TT_AtOp_State_0>::value;
     class TT_AtOp : public _TT_Domain, public _TT_QueriableAlias, public Picklable<TT_AtOp, TT_AtOp_State, tt_atop_state_size> {
         std::string _op_name;
         std::string _reg_alias;
+        AtOp _op_type;
     public:
-        TT_AtOp(const std::string& op_name, const std::string& op_sign, const std::string& reg_alias) noexcept : _TT_Domain(op_sign), _op_name(op_name), _reg_alias(reg_alias) {}
-        TT_AtOp(const TT_AtOp& other) noexcept : _TT_Domain(other), _op_name(other._op_name), _reg_alias(other._reg_alias) {}
-        TT_AtOp(TT_AtOp&& other) noexcept : _TT_Domain(other), _op_name(std::move(other._op_name)), _reg_alias(std::move(other._reg_alias)) {}
-        TT_AtOp& operator=(const TT_AtOp& other) noexcept { if(this == &other) return *this; _TT_Domain::operator=(other); _op_name = other._op_name; _reg_alias = other._reg_alias; return *this; }
-        TT_AtOp& operator=(TT_AtOp&& other) noexcept { if(this == &other) return *this; _TT_Domain::operator=(other); _op_name = std::move(other._op_name); _reg_alias = std::move(other._reg_alias); return *this; }
-        bool operator==(const TT_AtOp& other) const noexcept { if(this == &other) return true; return (_TT_Domain::operator==(other) && (_op_name.compare(other._op_name) == 0) && (_reg_alias.compare(other._reg_alias) == 0)); }
+        TT_AtOp(const std::string& op_name, const std::string& op_sign, const std::string& reg_alias, const uint8_t& op_type) noexcept : _TT_Domain(op_sign), _op_name(op_name), _reg_alias(reg_alias), _op_type(static_cast<AtOp>(static_cast<int>(op_type))) {}
+        TT_AtOp(const TT_AtOp& other) noexcept : _TT_Domain(other), _op_name(other._op_name), _reg_alias(other._reg_alias), _op_type(other._op_type) {}
+        TT_AtOp(TT_AtOp&& other) noexcept : _TT_Domain(other), _op_name(std::move(other._op_name)), _reg_alias(std::move(other._reg_alias)), _op_type(std::move(other._op_type)) {}
+        TT_AtOp& operator=(const TT_AtOp& other) noexcept { if(this == &other) return *this; _TT_Domain::operator=(other); _op_name = other._op_name; _reg_alias = other._reg_alias; _op_type = other._op_type; return *this; }
+        TT_AtOp& operator=(TT_AtOp&& other) noexcept { if(this == &other) return *this; _TT_Domain::operator=(other); _op_name = std::move(other._op_name); _reg_alias = std::move(other._reg_alias); _op_type = std::move(other._op_type); return *this; }
+        bool operator==(const TT_AtOp& other) const noexcept { if(this == &other) return true; return (_TT_Domain::operator==(other) && (_op_name.compare(other._op_name) == 0) && (_reg_alias.compare(other._reg_alias) == 0)) && _op_type == other._op_type; }
         std::string op_name() const noexcept { return _op_name; }
         TDomain get_domain(const TToLimit& to_limit = {}, bool filter_invalid = false) const override { return std::set<SASS_Bits>{SASS_Bits::from_int(0, 1, 0), SASS_Bits::from_int(1, 1, 0)}; }
         std::string alias() const noexcept { return _reg_alias + _op_name; }
+        AtOp op_type() const noexcept { return _op_type; }
         std::string reg_alias() const noexcept { return _reg_alias; }
         std::vector<std::string> get_enc_alias() const noexcept override { return { alias() }; }
-        const TT_AtOp_State get_state(TT_AtOp* selfp=nullptr) const override { return std::make_tuple(op_name(), std::get<std::string>(value()), reg_alias()); }
+        const TT_AtOp_State get_state(TT_AtOp* selfp=nullptr) const override { return std::make_tuple(op_name(), std::get<std::string>(value()), reg_alias(), static_cast<uint8_t>(std::to_underlying(_op_type))); }
     };
     using TOpsVec = std::vector<TT_AtOp>;
     using TOpsStateVec = std::vector<TT_AtOp_State>;
@@ -132,7 +120,7 @@ namespace SASS {
     /// @brief This one represents [!]
     class TT_OpAtNot : public TT_AtOp { 
     public: 
-        TT_OpAtNot(const std::string& reg_alias) noexcept : TT_AtOp("@not", "!", reg_alias) {} 
+        TT_OpAtNot(const std::string& reg_alias) noexcept : TT_AtOp("@not", "!", reg_alias, static_cast<uint8_t>(std::to_underlying(AtOp::Not))) {} 
         TT_OpAtNot(const TT_AtOp& op) noexcept : TT_AtOp(op) {} /* extra convenience constructor for this one */
         TT_OpAtNot(const TT_OpAtNot& op) noexcept : TT_AtOp(op) {}
         TT_OpAtNot(TT_OpAtNot&& op) noexcept : TT_AtOp(op) {}
@@ -143,7 +131,7 @@ namespace SASS {
     /// @brief This one represents [-]
     class TT_OpAtNegate : public TT_AtOp {
     public: 
-        TT_OpAtNegate(const std::string& reg_alias) noexcept : TT_AtOp("@negate", "-", reg_alias) {} 
+        TT_OpAtNegate(const std::string& reg_alias) noexcept : TT_AtOp("@negate", "-", reg_alias, static_cast<uint8_t>(std::to_underlying(AtOp::Negate))) {} 
         TT_OpAtNegate(const TT_AtOp& op) noexcept : TT_AtOp(op) {} /* extra convenience constructor for this one */
         TT_OpAtNegate(const TT_OpAtNegate& other) noexcept : TT_AtOp(other) {} 
         TT_OpAtNegate(TT_OpAtNegate&& other) noexcept : TT_AtOp(other) {} 
@@ -154,7 +142,7 @@ namespace SASS {
     /// @brief This one represents [||]
     class TT_OpAtAbs : public TT_AtOp { 
     public:
-        TT_OpAtAbs(const std::string& reg_alias) noexcept : TT_AtOp("@absolute", "||", reg_alias) {} 
+        TT_OpAtAbs(const std::string& reg_alias) noexcept : TT_AtOp("@absolute", "||", reg_alias, static_cast<uint8_t>(std::to_underlying(AtOp::Abs))) {} 
         TT_OpAtAbs(const TT_AtOp& op) noexcept : TT_AtOp(op) {} /* extra convenience constructor for this one */
         TT_OpAtAbs(const TT_OpAtAbs& other) noexcept : TT_AtOp(other) {} 
         TT_OpAtAbs(TT_OpAtAbs&& other) noexcept : TT_AtOp(other) {} 
@@ -166,7 +154,7 @@ namespace SASS {
     /// NOTE: @sign exists for SASS_Func only and only on platforms older than and including SM 62! On newer platforns this one is ignored.
     class TT_OpAtSign : public TT_AtOp { 
     public: 
-        TT_OpAtSign(const std::string& reg_alias) noexcept : TT_AtOp("@sign", "&&", reg_alias) {} 
+        TT_OpAtSign(const std::string& reg_alias) noexcept : TT_AtOp("@sign", "&&", reg_alias, static_cast<uint8_t>(std::to_underlying(AtOp::Sign))) {} 
         TT_OpAtSign(const TT_AtOp& op) noexcept : TT_AtOp(op) {} /* extra convenience constructor for this one */
         TT_OpAtSign(const TT_OpAtSign& other) noexcept : TT_AtOp(other) {} 
         TT_OpAtSign(TT_OpAtSign&& other) noexcept : TT_AtOp(other) {} 
@@ -177,7 +165,7 @@ namespace SASS {
     /// @brief This one represents [~]
     class TT_OpAtInvert : public TT_AtOp { 
     public: 
-        TT_OpAtInvert(const std::string& reg_alias) noexcept : TT_AtOp("@invert", "~", reg_alias) {} 
+        TT_OpAtInvert(const std::string& reg_alias) noexcept : TT_AtOp("@invert", "~", reg_alias, static_cast<uint8_t>(std::to_underlying(AtOp::Invert))) {} 
         TT_OpAtInvert(const TT_AtOp& op) noexcept : TT_AtOp(op) {} /* extra convenience constructor for this one */
         TT_OpAtInvert(const TT_OpAtInvert& other) noexcept : TT_AtOp(other) {} 
         TT_OpAtInvert(TT_OpAtInvert&& other) noexcept : TT_AtOp(other) {} 
@@ -213,7 +201,7 @@ namespace SASS {
         }
     };
 
-    class TT_NoDefault : protected TT_Default { 
+    class TT_NoDefault : public TT_Default { 
     public: 
         TT_NoDefault() : TT_Default(0, false, {}) { TT_Default::_exists = false; } 
         TT_NoDefault(const TT_NoDefault& other) : TT_Default(other) {} 
@@ -258,7 +246,7 @@ namespace SASS {
         static uint64_t max_val(const TT_FuncArg& arg) noexcept { return arg._max_val; }
     };
 
-    using TT_Func_State_0 = std::tuple<std::string, std::string, TStrOptionsSet, TT_FuncArg_State, bool, bool, TT_Alias_State>;
+    using TT_Func_State_0 = std::tuple<std::string, TStrOptionsSet, TT_FuncArg_State, bool, bool, TT_Alias_State>;
     using TT_Func_State = std::variant<TT_Func_State_0>;
     constexpr size_t tt_func_state_size = std::tuple_size<TT_Func_State_0>::value;
     class TT_Func : public _TT_Assemblable, public _TT_WithAlias, public Picklable<TT_Func, TT_Func_State, tt_func_state_size> {
@@ -288,10 +276,10 @@ namespace SASS {
             }
         }
     public:
-        TT_Func(const std::string& class_name, const std::string& func_name, const TStrOptionsSet& options, const TT_FuncArg& arg_default, bool star, bool is_address, const TT_Alias& alias) noexcept 
-          : _TT_Assemblable(class_name, func_name), _options(options), _arg_default(arg_default), _star(star), _is_address(is_address), _alias(alias), _func(_init_func(*this, func_name)) {}
-        TT_Func(const std::string& class_name, const std::string& func_name, const TStrOptionsSet& options, const TT_FuncArg_State& arg_default, bool star, bool is_address, const TT_Alias_State& alias) noexcept
-          : _TT_Assemblable(class_name, func_name), _options(options), _arg_default(TT_FuncArg::muh(arg_default)), _star(star), _is_address(is_address), _alias(TT_Alias::muh(alias)), _func(_init_func(*this, func_name)) {}
+        TT_Func(const std::string& func_name, const TStrOptionsSet& options, const TT_FuncArg& arg_default, bool star, bool is_address, const TT_Alias& alias) noexcept 
+          : _TT_Assemblable(func_name), _options(options), _arg_default(arg_default), _star(star), _is_address(is_address), _alias(alias), _func(_init_func(*this, func_name)) {}
+        TT_Func(const std::string& func_name, const TStrOptionsSet& options, const TT_FuncArg_State& arg_default, bool star, bool is_address, const TT_Alias_State& alias) noexcept
+          : _TT_Assemblable(func_name), _options(options), _arg_default(TT_FuncArg::muh(arg_default)), _star(star), _is_address(is_address), _alias(TT_Alias::muh(alias)), _func(_init_func(*this, func_name)) {}
         TT_Func(const TT_Func& other) noexcept
           : _TT_Assemblable(other), _options(other._options), _arg_default(other._arg_default), _star(other._star), _is_address(other._is_address), _alias(other._alias), _func(other._func) {}
         TT_Func(TT_Func&& other) noexcept
@@ -325,11 +313,11 @@ namespace SASS {
             return _func.sass_from_bits(BitVector(bits.end() - bl, bits.end()));
         }
         const TT_Alias& alias() const noexcept override { return _alias; }
-        const TT_Func_State get_state(TT_Func* selfp=nullptr) const override { return std::make_tuple(class_name(), std::get<std::string>(value()), _options, _arg_default.get_state(), _star, _is_address, _alias.get_state()); }
+        const TT_Func_State get_state(TT_Func* selfp=nullptr) const override { return std::make_tuple(std::get<std::string>(value()), _options, _arg_default.get_state(), _star, _is_address, _alias.get_state()); }
     };
 
-    using TT_Reg_State_0 = std::tuple<std::string, int, TT_Default_State, TOptions, TT_Alias_State>;
-    using TT_Reg_State_1 = std::tuple<std::string, std::string, TT_Default_State, TOptions, TT_Alias_State>;
+    using TT_Reg_State_0 = std::tuple<int, TT_Default_State, TOptions, TT_Alias_State>;
+    using TT_Reg_State_1 = std::tuple<std::string, TT_Default_State, TOptions, TT_Alias_State>;
     using TT_Reg_State = std::variant<TT_Reg_State_0, TT_Reg_State_1>;
     constexpr size_t tt_reg_state_size = std::tuple_size<TT_Reg_State_0>::value;
     class TT_Reg : public _TT_Assemblable, public _TT_WithAlias, public Picklable<TT_Reg, TT_Reg_State, tt_reg_state_size> {
@@ -338,10 +326,10 @@ namespace SASS {
         TT_Alias _alias;
         uint8_t _min_bit_len;
     public:
-        TT_Reg(const std::string& class_name, const TValue& value, const TT_Default& default_val, const TOptions& options, const TT_Alias& alias) noexcept
-          : _TT_Assemblable(class_name, value), _default(default_val), _options(options), _alias(alias), _min_bit_len(Utils::bit_len(Utils::max_option( _options))) {}
-        TT_Reg(const std::string& class_name, const TValue& value, const TT_Default_State& default_val, const TOptions& options, const TT_Alias_State& alias) noexcept
-          : _TT_Assemblable(class_name, value), _default(TT_Default::muh(default_val)), _options(options), _alias(TT_Alias::muh(alias)), _min_bit_len(Utils::bit_len(Utils::max_option( _options))) {}
+        TT_Reg(const TValue& value, const TT_Default& default_val, const TOptions& options, const TT_Alias& alias) noexcept
+          : _TT_Assemblable(value), _default(default_val), _options(options), _alias(alias), _min_bit_len(Utils::bit_len(Utils::max_option( _options))) {}
+        TT_Reg(const TValue& value, const TT_Default_State& default_val, const TOptions& options, const TT_Alias_State& alias) noexcept
+          : _TT_Assemblable(value), _default(TT_Default::muh(default_val)), _options(options), _alias(TT_Alias::muh(alias)), _min_bit_len(Utils::bit_len(Utils::max_option( _options))) {}
         TT_Reg(const TT_Reg& other) noexcept
           : _TT_Assemblable(other), _default(other._default), _options(other._options), _alias(other._alias), _min_bit_len(other._min_bit_len) {}
         TT_Reg(TT_Reg&& other) noexcept
@@ -382,8 +370,8 @@ namespace SASS {
         const TT_Alias& alias() const noexcept override { return _alias; }
         const TT_Reg_State get_state(TT_Reg* selfp=nullptr) const override { 
             TValue val = value();
-            if(std::holds_alternative<int>(val)) return std::make_tuple(class_name(), std::get<int>(val), _default.get_state(), _options, _alias.get_state()); 
-            return std::make_tuple(class_name(), std::get<std::string>(val), _default.get_state(), _options, _alias.get_state()); 
+            if(std::holds_alternative<int>(val)) return std::make_tuple(std::get<int>(val), _default.get_state(), _options, _alias.get_state()); 
+            return std::make_tuple(std::get<std::string>(val), _default.get_state(), _options, _alias.get_state()); 
         }
     };
 
@@ -405,81 +393,92 @@ namespace SASS {
         const TT_ICode_State get_state(TT_ICode* selfp=nullptr) const override { return std::make_tuple(_bin_str, _bin_ind, _bin_tup); }
     };
 
-    using TT_Pred_State_0 = std::tuple<std::string, TT_Alias_State, TT_Reg_State, TT_AtOp_State>;
+    // ==================================================================================================================
+    // = Following are the actual instruction components ================================================================
+    // ==================================================================================================================
+
+    using TT_Pred_State_0 = std::tuple<TT_Alias_State, TT_Reg_State, TT_AtOp_State>;
     using TT_Pred_State = std::variant<TT_Pred_State_0>;
     constexpr size_t tt_pred_state_size = std::tuple_size<TT_Pred_State_0>::value;
-    class TT_Pred : public _TT_HasClassName, public _TT_WithAlias, public _TT_QueriableAlias, public _TT_IsPrintable, public Picklable<TT_Pred, TT_Pred_State, tt_pred_state_size> {
+    class TT_Pred : public _TT_WithAlias, public _TT_QueriableAlias, public _TT_IsPrintable, public Picklable<TT_Pred, TT_Pred_State, tt_pred_state_size> {
         TT_Alias _alias;
         TT_Reg _reg;
         TT_OpAtNot _op;
     public:
-        TT_Pred(const std::string& class_name, const TT_Alias& alias, const TT_Reg& reg, const TT_OpAtNot& op) noexcept
-          : _TT_HasClassName(class_name), _alias(alias), _reg(reg), _op(op) {}
-        TT_Pred(const std::string& class_name, const TT_Alias_State& alias, const TT_Reg_State& reg, const TT_AtOp_State& op) noexcept
-          : _TT_HasClassName(class_name), _alias(TT_Alias::muh(alias)), _reg(TT_Reg::muh(reg)), _op(TT_OpAtNot::muh(op)) {}
+        TT_Pred(const TT_Alias& alias, const TT_Reg& reg, const TT_OpAtNot& op) noexcept
+          : _alias(alias), _reg(reg), _op(op) {}
+        TT_Pred(const TT_Alias_State& alias, const TT_Reg_State& reg, const TT_AtOp_State& op) noexcept
+          : _alias(TT_Alias::muh(alias)), _reg(TT_Reg::muh(reg)), _op(TT_OpAtNot::muh(op)) {}
         TT_Pred(const TT_Pred& other) noexcept
-          : _TT_HasClassName(other), _alias(other._alias), _reg(other._reg), _op(other._op) {}
+          : _alias(other._alias), _reg(other._reg), _op(other._op) {}
         TT_Pred(TT_Pred&& other) noexcept
-          : _TT_HasClassName(other), _alias(std::move(other._alias)), _reg(std::move(other._reg)), _op(std::move(other._op)) {}
-        TT_Pred& operator=(const TT_Pred& other) noexcept { if(this == &other) return *this; _TT_HasClassName::operator=(other); _alias = other._alias; _reg = other._reg; _op = other._op; return *this; }
-        TT_Pred& operator=(TT_Pred&& other) noexcept { if(this == &other) return *this; _TT_HasClassName::operator=(other); _alias = std::move(other._alias); _reg = std::move(other._reg); _op = std::move(other._op); return *this; }
-        bool operator==(const TT_Pred& other) const noexcept { if(this == &other) return true; return _TT_HasClassName::operator==(other) && (_alias == other._alias) && (_reg == other._reg) && (_op == other._op); }
+          : _alias(std::move(other._alias)), _reg(std::move(other._reg)), _op(std::move(other._op)) {}
+        TT_Pred& operator=(const TT_Pred& other) noexcept { if(this == &other) return *this; _alias = other._alias; _reg = other._reg; _op = other._op; return *this; }
+        TT_Pred& operator=(TT_Pred&& other) noexcept { if(this == &other) return *this; _alias = std::move(other._alias); _reg = std::move(other._reg); _op = std::move(other._op); return *this; }
+        bool operator==(const TT_Pred& other) const noexcept { if(this == &other) return true; return (_alias == other._alias) && (_reg == other._reg) && (_op == other._op); }
         const TT_Reg& value() const noexcept { return _reg; }
+        virtual bool is_none() const noexcept { return false; }
         std::string __str__() const override { return std::string("@[") + _op.__str__() + "]" + _reg.__str__() + ":" + _alias.__str__(); }
         const TT_Alias& alias() const noexcept override { return _alias; }
         std::vector<std::string> get_enc_alias() const noexcept override { return { _alias.alias(), _op.alias() }; }
-        const TT_Pred_State get_state(TT_Pred* selfp=nullptr) const override { return std::make_tuple(class_name(), _alias.get_state(), _reg.get_state(), _op.get_state()); }
+        const TT_Pred_State get_state(TT_Pred* selfp=nullptr) const override { return std::make_tuple(_alias.get_state(), _reg.get_state(), _op.get_state()); }
     };
 
-    using TT_Ext_State_0 = std::tuple<std::string, TT_Alias_State, TT_Reg_State, TT_Default_State, bool>;
+    class TT_NoPred : public TT_Pred { 
+    public: 
+        TT_NoPred() : TT_Pred(TT_Alias("none"), TT_Reg(0, TT_NoDefault(), {}, TT_Alias("none")), TT_OpAtNot("none")) {} 
+        bool is_none() const noexcept override { return true; }
+    };
+
+    using TT_Ext_State_0 = std::tuple<TT_Alias_State, TT_Reg_State, TT_Default_State, bool>;
     using TT_Ext_State = std::variant<TT_Ext_State_0>;
     constexpr size_t tt_ext_state_size = std::tuple_size<TT_Ext_State_0>::value;
-    class TT_Ext : public _TT_HasClassName, public _TT_WithAlias, public _TT_QueriableAlias, public _TT_IsPrintable, public Picklable<TT_Ext, TT_Ext_State, tt_ext_state_size> {
+    class TT_Ext : public _TT_WithAlias, public _TT_QueriableAlias, public _TT_IsPrintable, public Picklable<TT_Ext, TT_Ext_State, tt_ext_state_size> {
         TT_Alias _alias;
         TT_Reg _reg;
         TT_Default _default;
         bool _is_at_alias;
     public:
-        TT_Ext(const std::string& class_name, const TT_Alias& alias, const TT_Reg& reg, const TT_Default& default_val, bool is_at_alias) noexcept 
-            : _TT_HasClassName(class_name), _alias(alias), _reg(reg), _default(default_val), _is_at_alias(is_at_alias) {}
-        TT_Ext(const std::string& class_name, const TT_Alias_State& alias, const TT_Reg_State& reg, const TT_Default_State& default_val, bool is_at_alias) noexcept 
-            : _TT_HasClassName(class_name), _alias(TT_Alias::muh(alias)), _reg(TT_Reg::muh(reg)), _default(TT_Default::muh(default_val)), _is_at_alias(is_at_alias) {}
+        TT_Ext(const TT_Alias& alias, const TT_Reg& reg, const TT_Default& default_val, bool is_at_alias) noexcept 
+            : _alias(alias), _reg(reg), _default(default_val), _is_at_alias(is_at_alias) {}
+        TT_Ext(const TT_Alias_State& alias, const TT_Reg_State& reg, const TT_Default_State& default_val, bool is_at_alias) noexcept 
+            : _alias(TT_Alias::muh(alias)), _reg(TT_Reg::muh(reg)), _default(TT_Default::muh(default_val)), _is_at_alias(is_at_alias) {}
         TT_Ext(const TT_Ext& other) noexcept 
-            : _TT_HasClassName(other), _alias(other._alias), _reg(other._reg), _default(other._default), _is_at_alias(other._is_at_alias) {}
+            : _alias(other._alias), _reg(other._reg), _default(other._default), _is_at_alias(other._is_at_alias) {}
         TT_Ext(TT_Ext&& other) noexcept 
-            : _TT_HasClassName(other), _alias(std::move(other._alias)), _reg(std::move(other._reg)), _default(std::move(other._default)), _is_at_alias(std::move(other._is_at_alias)) {}
-        TT_Ext& operator=(const TT_Ext& other) noexcept { if(this == &other) return *this; _TT_HasClassName::operator=(other); _alias = other._alias; _reg = other._reg; _default = other._default; _is_at_alias = other._is_at_alias; return *this; }
-        TT_Ext& operator=(TT_Ext&& other) noexcept { if(this == &other) return *this; _TT_HasClassName::operator=(other); _alias = std::move(other._alias); _reg = std::move(other._reg); _default = std::move(other._default); _is_at_alias = std::move(other._is_at_alias); return *this; }
-        bool operator==(const TT_Ext& other) const noexcept { if(this == &other) return true; return _TT_HasClassName::operator==(other) && (_alias == other._alias) && (_reg == other._reg) && (_default == other._default) && (_is_at_alias == other._is_at_alias); }
+            : _alias(std::move(other._alias)), _reg(std::move(other._reg)), _default(std::move(other._default)), _is_at_alias(std::move(other._is_at_alias)) {}
+        TT_Ext& operator=(const TT_Ext& other) noexcept { if(this == &other) return *this; _alias = other._alias; _reg = other._reg; _default = other._default; _is_at_alias = other._is_at_alias; return *this; }
+        TT_Ext& operator=(TT_Ext&& other) noexcept { if(this == &other) return *this; _alias = std::move(other._alias); _reg = std::move(other._reg); _default = std::move(other._default); _is_at_alias = std::move(other._is_at_alias); return *this; }
+        bool operator==(const TT_Ext& other) const noexcept { if(this == &other) return true; return (_alias == other._alias) && (_reg == other._reg) && (_default == other._default) && (_is_at_alias == other._is_at_alias); }
         std::string __str__() const override { return std::string("/") + _reg.__str__() + (_is_at_alias ? "@" : "") + ":" + _alias.__str__(); }
         const TT_Reg& value() const noexcept { return _reg; }
         const TT_Alias& alias() const noexcept override { return _alias; }
         std::vector<std::string> get_enc_alias() const noexcept override { return { _alias.alias() }; }
-        const TT_Ext_State get_state(TT_Ext* selfp=nullptr) const override { return std::make_tuple(class_name(), _alias.get_state(), _reg.get_state(), _default.get_state(), _is_at_alias); }
+        const TT_Ext_State get_state(TT_Ext* selfp=nullptr) const override { return std::make_tuple(_alias.get_state(), _reg.get_state(), _default.get_state(), _is_at_alias); }
     };
     using TExtVec = std::vector<TT_Ext>;
     using TExtStateVec = std::vector<TT_Ext_State>;
 
-    using TT_Opcode_State_0 = std::tuple<std::string, TT_Alias_State, TT_ICode_State, TExtStateVec>;
+    using TT_Opcode_State_0 = std::tuple<TT_Alias_State, TT_ICode_State, TExtStateVec>;
     using TT_Opcode_State = std::variant<TT_Opcode_State_0>;
     constexpr size_t tt_opcode_state_size = std::tuple_size<TT_Opcode_State_0>::value;
-    class TT_Opcode : public _TT_HasClassName, public _TT_WithAlias, public _TT_IsPrintable, public _TT_QueriableAlias, public Picklable<TT_Opcode, TT_Opcode_State, tt_opcode_state_size> {
+    class TT_Opcode : public _TT_WithAlias, public _TT_IsPrintable, public _TT_QueriableAlias, public Picklable<TT_Opcode, TT_Opcode_State, tt_opcode_state_size> {
         TT_Alias _alias;
         TT_ICode _icode;
         TExtVec _extensions;
 
     public:
-        TT_Opcode(const std::string& class_name, const TT_Alias& alias, const TT_ICode& icode, const TExtVec& extensions) noexcept 
-          : _TT_HasClassName(class_name), _alias(alias), _icode(icode), _extensions(extensions) {}
-        TT_Opcode(const std::string& class_name, const TT_Alias_State& alias, const TT_ICode_State& icode, const TExtStateVec& extensions) noexcept 
-          : _TT_HasClassName(class_name), _alias(TT_Alias::muh(alias)), _icode(TT_ICode::muh(icode)), _extensions(TT_Ext::from_state_vec(extensions)) {}
+        TT_Opcode(const TT_Alias& alias, const TT_ICode& icode, const TExtVec& extensions) noexcept 
+          : _alias(alias), _icode(icode), _extensions(extensions) {}
+        TT_Opcode(const TT_Alias_State& alias, const TT_ICode_State& icode, const TExtStateVec& extensions) noexcept 
+          : _alias(TT_Alias::muh(alias)), _icode(TT_ICode::muh(icode)), _extensions(TT_Ext::from_state_vec(extensions)) {}
         TT_Opcode(const TT_Opcode& other) noexcept 
-          : _TT_HasClassName(other), _alias(other._alias), _icode(other._icode), _extensions(other._extensions) {}
+          : _alias(other._alias), _icode(other._icode), _extensions(other._extensions) {}
         TT_Opcode(TT_Opcode&& other) noexcept 
-          : _TT_HasClassName(other), _alias(std::move(other._alias)), _icode(std::move(other._icode)), _extensions(std::move(other._extensions)) {}
-        TT_Opcode& operator=(const TT_Opcode& other) noexcept { if(this == &other) return *this; _TT_HasClassName::operator=(other); _alias = other._alias; _icode = other._icode; _extensions = other._extensions; return *this; }
-        TT_Opcode& operator=(TT_Opcode&& other) noexcept { if(this == &other) return *this; _TT_HasClassName::operator=(other); _alias = std::move(other._alias); _icode = std::move(other._icode); _extensions = std::move(other._extensions); return *this; }
-        bool operator==(const TT_Opcode& other) const noexcept { if(this == &other) return true; return _TT_HasClassName::operator==(other) && (_alias == other._alias) && (_icode == other._icode) && (_extensions == other._extensions); }
+          : _alias(std::move(other._alias)), _icode(std::move(other._icode)), _extensions(std::move(other._extensions)) {}
+        TT_Opcode& operator=(const TT_Opcode& other) noexcept { if(this == &other) return *this; _alias = other._alias; _icode = other._icode; _extensions = other._extensions; return *this; }
+        TT_Opcode& operator=(TT_Opcode&& other) noexcept { if(this == &other) return *this; _alias = std::move(other._alias); _icode = std::move(other._icode); _extensions = std::move(other._extensions); return *this; }
+        bool operator==(const TT_Opcode& other) const noexcept { if(this == &other) return true; return (_alias == other._alias) && (_icode == other._icode) && (_extensions == other._extensions); }
         std::string __str__() const override {
             std::stringstream res;
             res << _icode.__str__();
@@ -501,17 +500,17 @@ namespace SASS {
             res.shrink_to_fit();
             return res;
         }
-        const TT_Opcode_State get_state(TT_Opcode* selfp=nullptr) const override { return std::make_tuple(class_name(), _alias.get_state(), _icode.get_state(), TT_Ext::to_state_vec(_extensions)); }
+        const TT_Opcode_State get_state(TT_Opcode* selfp=nullptr) const override { return std::make_tuple(_alias.get_state(), _icode.get_state(), TT_Ext::to_state_vec(_extensions)); }
     };
 
     using TParamFuncReg = std::variant<TT_Reg, TT_Func, std::string>;
     class _TT_CashBase : public _TT_QueriableAlias, public _TT_IsPrintable {};
 
-    using TT_Param_State_0 = std::tuple<std::string, TT_Alias_State, TOpsStateVec, TT_Reg_State, TExtStateVec, bool, bool>;
-    using TT_Param_State_1 = std::tuple<std::string, TT_Alias_State, TOpsStateVec, TT_Func_State, TExtStateVec, bool, bool>;
+    using TT_Param_State_0 = std::tuple<TT_Alias_State, TOpsStateVec, TT_Reg_State, TExtStateVec, bool, bool>;
+    using TT_Param_State_1 = std::tuple<TT_Alias_State, TOpsStateVec, TT_Func_State, TExtStateVec, bool, bool>;
     using TT_Param_State = std::variant<TT_Param_State_0, TT_Param_State_1>;
     constexpr size_t tt_param_state_size = std::tuple_size<TT_Param_State_0>::value;
-    class TT_Param : public _TT_CashBase, public _TT_HasClassName, public Picklable<TT_Param, TT_Param_State, tt_param_state_size> {
+    class TT_Param : public _TT_CashBase, public Picklable<TT_Param, TT_Param_State, tt_param_state_size> {
     protected:
         TT_Alias _alias;
         TOpsVec _ops;
@@ -520,19 +519,19 @@ namespace SASS {
         bool _is_at_alias;
         bool _has_attr_star;
     public:
-        TT_Param(const std::string& class_name, const TT_Alias& alias, const TOpsVec& ops, const TParamFuncReg& value, const TExtVec& extensions, bool is_at_alias, bool has_attr_star) noexcept 
-          : _TT_HasClassName(class_name), _alias(alias), _ops(ops), _value(value), _extensions(extensions), _is_at_alias(is_at_alias), _has_attr_star(has_attr_star) {}
-        TT_Param(const std::string& class_name, const TT_Alias_State& alias, const TOpsStateVec& ops, const TT_Reg_State& value, const TExtStateVec& extensions, bool is_at_alias, bool has_attr_star) noexcept 
-          : _TT_HasClassName(class_name), _alias(TT_Alias::muh(alias)), _ops(TT_AtOp::from_state_vec(ops)), _value(TT_Reg::muh(value)), _extensions(TT_Ext::from_state_vec(extensions)), _is_at_alias(is_at_alias), _has_attr_star(has_attr_star) {}
-        TT_Param(const std::string& class_name, const TT_Alias_State& alias, const TOpsStateVec& ops, const TT_Func_State& value, const TExtStateVec& extensions, bool is_at_alias, bool has_attr_star) noexcept 
-          : _TT_HasClassName(class_name), _alias(TT_Alias::muh(alias)), _ops(TT_AtOp::from_state_vec(ops)), _value(TT_Func::muh(value)), _extensions(TT_Ext::from_state_vec(extensions)), _is_at_alias(is_at_alias), _has_attr_star(has_attr_star) {}
+        TT_Param(const TT_Alias& alias, const TOpsVec& ops, const TParamFuncReg& value, const TExtVec& extensions, bool is_at_alias, bool has_attr_star) noexcept 
+          : _alias(alias), _ops(ops), _value(value), _extensions(extensions), _is_at_alias(is_at_alias), _has_attr_star(has_attr_star) {}
+        TT_Param(const TT_Alias_State& alias, const TOpsStateVec& ops, const TT_Reg_State& value, const TExtStateVec& extensions, bool is_at_alias, bool has_attr_star) noexcept 
+          : _alias(TT_Alias::muh(alias)), _ops(TT_AtOp::from_state_vec(ops)), _value(TT_Reg::muh(value)), _extensions(TT_Ext::from_state_vec(extensions)), _is_at_alias(is_at_alias), _has_attr_star(has_attr_star) {}
+        TT_Param(const TT_Alias_State& alias, const TOpsStateVec& ops, const TT_Func_State& value, const TExtStateVec& extensions, bool is_at_alias, bool has_attr_star) noexcept 
+          : _alias(TT_Alias::muh(alias)), _ops(TT_AtOp::from_state_vec(ops)), _value(TT_Func::muh(value)), _extensions(TT_Ext::from_state_vec(extensions)), _is_at_alias(is_at_alias), _has_attr_star(has_attr_star) {}
         TT_Param(const TT_Param& other) noexcept 
-          : _TT_HasClassName(other), _alias(other._alias), _ops(other._ops), _value(other._value), _extensions(other._extensions), _is_at_alias(other._is_at_alias), _has_attr_star(other._has_attr_star) {}
+          : _alias(other._alias), _ops(other._ops), _value(other._value), _extensions(other._extensions), _is_at_alias(other._is_at_alias), _has_attr_star(other._has_attr_star) {}
         TT_Param(TT_Param&& other) noexcept 
-          : _TT_HasClassName(other), _alias(std::move(other._alias)), _ops(std::move(other._ops)), _value(std::move(other._value)), _extensions(std::move(other._extensions)), _is_at_alias(std::move(other._is_at_alias)), _has_attr_star(std::move(other._has_attr_star)) {}
-        TT_Param& operator=(const TT_Param& other) noexcept { if(this == &other) return *this; _TT_HasClassName::operator=(other); _alias = other._alias; _ops = other._ops; _value = other._value; _extensions = other._extensions; return *this; }
-        TT_Param& operator=(TT_Param&& other) noexcept { if(this == &other) return *this; _TT_HasClassName::operator=(other); _alias = std::move(other._alias); _ops = std::move(other._ops); _value = std::move(other._value); _extensions = std::move(other._extensions); return *this; }
-        bool operator==(const TT_Param& other) const noexcept { if(this == &other) return true; return _TT_HasClassName::operator==(other) && (_alias == other._alias) && (_ops == other._ops) && (_value == other._value) && (_extensions == other._extensions) && (_is_at_alias == other._is_at_alias) && (_has_attr_star == other._has_attr_star); }
+          : _alias(std::move(other._alias)), _ops(std::move(other._ops)), _value(std::move(other._value)), _extensions(std::move(other._extensions)), _is_at_alias(std::move(other._is_at_alias)), _has_attr_star(std::move(other._has_attr_star)) {}
+        TT_Param& operator=(const TT_Param& other) noexcept { if(this == &other) return *this; _alias = other._alias; _ops = other._ops; _value = other._value; _extensions = other._extensions; return *this; }
+        TT_Param& operator=(TT_Param&& other) noexcept { if(this == &other) return *this; _alias = std::move(other._alias); _ops = std::move(other._ops); _value = std::move(other._value); _extensions = std::move(other._extensions); return *this; }
+        bool operator==(const TT_Param& other) const noexcept { if(this == &other) return true; return (_alias == other._alias) && (_ops == other._ops) && (_value == other._value) && (_extensions == other._extensions) && (_is_at_alias == other._is_at_alias) && (_has_attr_star == other._has_attr_star); }
         const TParamFuncReg& value() const noexcept { return _value; }
         const TT_Alias& alias() const noexcept { return _alias; }
         bool is_at_alias() const noexcept { return _is_at_alias; }
@@ -565,27 +564,27 @@ namespace SASS {
             return res.str();
         }
         const TT_Param_State get_state(TT_Param* selfp=nullptr) const override {
-            if(std::holds_alternative<TT_Reg>(_value)) return std::make_tuple(class_name(), _alias.get_state(), TT_AtOp::to_state_vec(_ops), std::get<TT_Reg>(_value).get_state(), TT_Ext::to_state_vec(_extensions), _is_at_alias, _has_attr_star);
-            return std::make_tuple(class_name(), _alias.get_state(), TT_AtOp::to_state_vec(_ops), std::get<TT_Func>(_value).get_state(), TT_Ext::to_state_vec(_extensions), _is_at_alias, _has_attr_star);
+            if(std::holds_alternative<TT_Reg>(_value)) return std::make_tuple(_alias.get_state(), TT_AtOp::to_state_vec(_ops), std::get<TT_Reg>(_value).get_state(), TT_Ext::to_state_vec(_extensions), _is_at_alias, _has_attr_star);
+            return std::make_tuple(_alias.get_state(), TT_AtOp::to_state_vec(_ops), std::get<TT_Func>(_value).get_state(), TT_Ext::to_state_vec(_extensions), _is_at_alias, _has_attr_star);
         }
     };
     using TParamVec = std::vector<TT_Param>;
     using TParamStateVec = std::vector<TT_Param_State>;
 
-    using TT_List_State_0 = std::tuple<std::string, TParamStateVec, TExtStateVec>;
+    using TT_List_State_0 = std::tuple<TParamStateVec, TExtStateVec>;
     using TT_List_State = std::variant<TT_List_State_0>;
     constexpr size_t tt_list_state_size = std::tuple_size<TT_List_State_0>::value;
-    class TT_List : public _TT_HasClassName, public _TT_IsPrintable, public _TT_QueriableAlias, public Picklable<TT_List, TT_List_State, tt_list_state_size> {
+    class TT_List : public _TT_IsPrintable, public _TT_QueriableAlias, public Picklable<TT_List, TT_List_State, tt_list_state_size> {
         TParamVec _value;
         TExtVec _extensions;
     public:
-        TT_List(const std::string& class_name, const TParamVec& params, const TExtVec& extensions) noexcept : _TT_HasClassName(class_name), _value(params), _extensions(extensions) {}
-        TT_List(const std::string& class_name, const TParamStateVec& params, const TExtStateVec& extensions) noexcept : _TT_HasClassName(class_name), _value(TT_Param::from_state_vec(params)), _extensions(TT_Ext::from_state_vec(extensions)) {}
-        TT_List(const TT_List& other) noexcept : _TT_HasClassName(other), _value(other._value), _extensions(other._extensions) {}
-        TT_List(TT_List&& other) noexcept : _TT_HasClassName(other), _value(std::move(other._value)), _extensions(std::move(other._extensions)) {}
-        TT_List& operator=(const TT_List& other) noexcept { if(this == &other) return *this; _TT_HasClassName::operator=(other); _value = other._value; _extensions = other._extensions; return *this; }
-        TT_List& operator=(TT_List&& other) noexcept { if(this == &other) return *this; _TT_HasClassName::operator=(other); _value = std::move(other._value); _extensions = std::move(other._extensions); return *this; }
-        bool operator==(const TT_List& other) const noexcept { if(this == &other) return true; _TT_HasClassName::operator==(other) && (_value == other._value) && (_extensions == other._extensions); }
+        TT_List(const TParamVec& params, const TExtVec& extensions) noexcept : _value(params), _extensions(extensions) {}
+        TT_List(const TParamStateVec& params, const TExtStateVec& extensions) noexcept : _value(TT_Param::from_state_vec(params)), _extensions(TT_Ext::from_state_vec(extensions)) {}
+        TT_List(const TT_List& other) noexcept : _value(other._value), _extensions(other._extensions) {}
+        TT_List(TT_List&& other) noexcept : _value(std::move(other._value)), _extensions(std::move(other._extensions)) {}
+        TT_List& operator=(const TT_List& other) noexcept { if(this == &other) return *this; _value = other._value; _extensions = other._extensions; return *this; }
+        TT_List& operator=(TT_List&& other) noexcept { if(this == &other) return *this; _value = std::move(other._value); _extensions = std::move(other._extensions); return *this; }
+        bool operator==(const TT_List& other) const noexcept { if(this == &other) return true; (_value == other._value) && (_extensions == other._extensions); }
         const TParamVec& value() { return _value; }
         std::vector<std::string> get_enc_alias() const noexcept override {
             std::vector<std::string> res;
@@ -615,7 +614,7 @@ namespace SASS {
 
             return res.str();
         }
-        const TT_List_State get_state(TT_List* selfp=nullptr) const override { return std::make_tuple(class_name(), TT_Param::to_state_vec(_value), TT_Ext::to_state_vec(_extensions)); }
+        const TT_List_State get_state(TT_List* selfp=nullptr) const override { return std::make_tuple(TT_Param::to_state_vec(_value), TT_Ext::to_state_vec(_extensions)); }
     };
     using TListVec = std::vector<TT_List>;
     using TListStateVec = std::vector<TT_List_State>;
@@ -656,8 +655,8 @@ namespace SASS {
     class TT_AttrParam : public TT_Param, public Picklable<TT_AttrParam, TT_AttrParam_State, tt_attrparam_state_size> {
         TListVec _attr;
     public:
-        TT_AttrParam(const std::string& class_name, const TT_Alias& alias, const TOpsVec& ops, const TParamFuncReg& value, const TListVec& attr, const TExtVec& extensions, bool is_at_alias, bool has_attr_star) noexcept 
-          : TT_Param(class_name, alias, ops, value, extensions, is_at_alias, has_attr_star), _attr(attr) {}
+        TT_AttrParam(const TT_Alias& alias, const TOpsVec& ops, const TParamFuncReg& value, const TListVec& attr, const TExtVec& extensions, bool is_at_alias, bool has_attr_star) noexcept 
+          : TT_Param(alias, ops, value, extensions, is_at_alias, has_attr_star), _attr(attr) {}
         TT_AttrParam(const TT_Param_State& param, const TListStateVec& attr) noexcept 
           : TT_Param(TT_Param::muh(param)), _attr(TT_List::from_state_vec(attr)) {}
         TT_AttrParam(const TT_AttrParam& other) noexcept 
@@ -701,32 +700,30 @@ namespace SASS {
         }
     };
 
-    using TCashType = std::variant<TT_CashComponent, TT_Param>;
-    // using TCashType = std::variant<int, std::string>;
-    using TCashStateType = std::variant<TT_CashComponent_State, TT_Param_State>;
-    // using TCashStateType = std::variant<int, std::string>;
-    constexpr size_t cash_type_size = std::variant_size_v<TCashStateType>;
-    static_assert(std::variant_size_v<TCashType> == std::variant_size_v<TCashStateType>);
+    using TCashComponentType = std::variant<TT_CashComponent, TT_Param>;
+    using TCashComponentStateType = std::variant<TT_CashComponent_State, TT_Param_State>;
+    constexpr size_t cash_type_size = std::variant_size_v<TCashComponentStateType>;
+    static_assert(std::variant_size_v<TCashComponentType> == std::variant_size_v<TCashComponentStateType>);
 
-    using TCashVec = std::vector<TCashType>;
-    using TCashStateVec = std::vector<TCashStateType>;
-    using TT_Cash_State_0 = std::tuple<std::string, TCashStateVec, bool>;
+    using TCashComponentsVec = std::vector<TCashComponentType>;
+    using TCashComponentsStateVec = std::vector<TCashComponentStateType>;
+    using TT_Cash_State_0 = std::tuple<TCashComponentsStateVec, bool>;
     using TT_Cash_State = std::variant<TT_Cash_State_0>;
     constexpr size_t tt_cash_state_size = std::tuple_size<TT_Cash_State_0>::value;
-    class TT_Cash : public _TT_HasClassName, public _TT_IsPrintable, public _TT_QueriableAlias, public Picklable<TT_Cash, TT_Cash_State, tt_cash_state_size> {
-        TCashVec _values;
+    class TT_Cash : public _TT_IsPrintable, public _TT_QueriableAlias, public Picklable<TT_Cash, TT_Cash_State, tt_cash_state_size> {
+        TCashComponentsVec _values;
         bool _added_later;
     public:
-        TT_Cash(const std::string& class_name, const TCashVec& cash_vals, bool added_later=false) noexcept : _TT_HasClassName(class_name), _values(cash_vals), _added_later(added_later) {}
-        TT_Cash(const std::string& class_name, const TCashStateVec& values, bool added_later) noexcept : _TT_HasClassName(class_name), _values(TT_Cash::muvh<TCashType, TCashStateType, cash_type_size>(values)), _added_later(added_later) {}
-        TT_Cash(const TT_Cash& other) noexcept : _TT_HasClassName(other), _values(other._values), _added_later(other._added_later) {}
-        TT_Cash(TT_Cash&& other) noexcept : _TT_HasClassName(other), _values(std::move(other._values)), _added_later(std::move(other._added_later)) {}
-        TT_Cash& operator=(const TT_Cash& other) { if(this == &other) return *this; _TT_HasClassName::operator=(other); _values = other._values; _added_later = other._added_later; return *this; }
-        TT_Cash& operator=(TT_Cash&& other) { if(this == &other) return *this; _TT_HasClassName::operator=(other); _values = std::move(other._values); _added_later = std::move(other._added_later); return *this; }
-        bool operator==(const TT_Cash& other) const noexcept { if(this == &other) return true; return _TT_HasClassName::operator==(other) && (_values == other._values) && (_added_later == other._added_later); }
+        TT_Cash(const TCashComponentsVec& cash_vals, bool added_later=false) noexcept : _values(cash_vals), _added_later(added_later) {}
+        TT_Cash(const TCashComponentsStateVec& values, bool added_later) noexcept : _values(TT_Cash::muv_vec_h<TCashComponentType, TCashComponentStateType, cash_type_size>(values)), _added_later(added_later) {}
+        TT_Cash(const TT_Cash& other) noexcept : _values(other._values), _added_later(other._added_later) {}
+        TT_Cash(TT_Cash&& other) noexcept : _values(std::move(other._values)), _added_later(std::move(other._added_later)) {}
+        TT_Cash& operator=(const TT_Cash& other) { if(this == &other) return *this; _values = other._values; _added_later = other._added_later; return *this; }
+        TT_Cash& operator=(TT_Cash&& other) { if(this == &other) return *this; _values = std::move(other._values); _added_later = std::move(other._added_later); return *this; }
+        bool operator==(const TT_Cash& other) const noexcept { if(this == &other) return true; return (_values == other._values) && (_added_later == other._added_later); }
         std::vector<std::string> get_enc_alias() const noexcept override {
             std::vector<std::string> res;
-            for(const TCashType& val : _values){
+            for(const TCashComponentType& val : _values){
                 if(std::holds_alternative<TT_Param>(val)){
                     const auto& v = std::get<TT_Param>(val).get_enc_alias();
                     res.insert(res.begin(), v.begin(), v.end());
@@ -738,7 +735,7 @@ namespace SASS {
             }
             return res;
         }
-        const TCashVec& values() { return _values; }
+        const TCashComponentsVec& values() { return _values; }
         std::string __str__() const override {
             std::stringstream res;
             res << "$( { ";
@@ -755,7 +752,7 @@ namespace SASS {
             return res.str();
         }
         const TT_Cash_State get_state(TT_Cash* selfp=nullptr) const override {
-            return std::make_tuple(class_name(),  TT_Cash::mpvh<TCashStateType, TCashType, cash_type_size>(_values), _added_later );
+            return std::make_tuple(TT_Cash::mpv_vec_h<TCashComponentStateType, TCashComponentType, cash_type_size>(_values), _added_later );
         }
     };
 }

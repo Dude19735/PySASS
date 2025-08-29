@@ -103,10 +103,6 @@ namespace SASS {
     class RSImm : public Imm {
     public:
         RSImm(int bit_len) noexcept : Imm(true, bit_len, func_RSImm) {}
-        RSImm(const RSImm& other) noexcept : Imm(other) {}
-        RSImm(RSImm&& other) noexcept : Imm(other) {}
-        RSImm operator=(const RSImm& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
-        RSImm operator=(RSImm&& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
         TDomain get_domain(bool is_address, int bit_len, bool has_max_val, int max_val, int max_bit_len) const override {
             if(bit_len == 0) throw std::runtime_error(Imm::get_err_msg(*this));
             return Imm::get_func_domain_signed(is_address, bit_len, has_max_val, max_val);
@@ -115,10 +111,6 @@ namespace SASS {
     class UImm : public Imm {
     public:
         UImm(int bit_len) noexcept : Imm(false, bit_len, func_UImm) {}
-        UImm(const UImm& other) noexcept : Imm(other) {}
-        UImm(UImm&& other) noexcept : Imm(other) {}
-        UImm operator=(const UImm& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
-        UImm operator=(UImm&& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
         TDomain get_domain(bool is_address, int bit_len, bool has_max_val, int max_val, int max_bit_len) const override {
             if(bit_len == 0) throw std::runtime_error(Imm::get_err_msg(*this));
             if(max_bit_len > 0 && bit_len > max_bit_len) bit_len = max_bit_len;
@@ -128,10 +120,6 @@ namespace SASS {
     class F16Imm : public Imm {
     public:
         F16Imm() noexcept : Imm(true, 16, func_F16Imm) {}
-        F16Imm(const F16Imm& other) noexcept : Imm(other) {}
-        F16Imm(F16Imm&& other) noexcept : Imm(other) {}
-        F16Imm operator=(const F16Imm& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
-        F16Imm operator=(F16Imm&& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
         TDomain get_domain(bool is_address, int bit_len, bool has_max_val, int max_val, int max_bit_len) const override {
             if(bit_len == 0) throw std::runtime_error(Imm::get_err_msg(*this));
             if(max_bit_len > 0 && bit_len > max_bit_len) bit_len = max_bit_len;
@@ -141,10 +129,6 @@ namespace SASS {
     class SImm : public Imm {
     public:
         SImm(int bit_len) noexcept : Imm(true, bit_len, func_SImm) {}
-        SImm(const SImm& other) noexcept : Imm(other) {}
-        SImm(SImm&& other) noexcept : Imm(other) {}
-        SImm operator=(const SImm& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
-        SImm operator=(SImm&& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
         TDomain get_domain(bool is_address, int bit_len, bool has_max_val, int max_val, int max_bit_len) const override {
             if(bit_len == 0) throw std::runtime_error(Imm::get_err_msg(*this));
             if(max_bit_len > 0 && bit_len > max_bit_len) bit_len = max_bit_len;
@@ -154,10 +138,6 @@ namespace SASS {
     class SSImm : public Imm {
     public:
         SSImm(int bit_len) noexcept : Imm(true, bit_len, func_SSImm) {}
-        SSImm(const SSImm& other) noexcept : Imm(other) {}
-        SSImm(SSImm&& other) noexcept : Imm(other) {}
-        SSImm operator=(const SSImm& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
-        SSImm operator=(SSImm&& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
         TDomain get_domain(bool is_address, int bit_len, bool has_max_val, int max_val, int max_bit_len) const override {
             if(bit_len == 0) throw std::runtime_error(Imm::get_err_msg(*this));
             if(max_bit_len > 0 && bit_len > max_bit_len) bit_len = max_bit_len;
@@ -167,10 +147,6 @@ namespace SASS {
     class F64Imm : public Imm {
     public:
         F64Imm() noexcept : Imm(true, 64, func_F64Imm) {}
-        F64Imm(const F64Imm& other) noexcept : Imm(other) {}
-        F64Imm(F64Imm&& other) noexcept : Imm(other) {}
-        F64Imm operator=(const F64Imm& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
-        F64Imm operator=(F64Imm&& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
         TDomain get_domain(bool is_address, int bit_len, bool has_max_val, int max_val, int max_bit_len) const override {
             if(bit_len == 0) throw std::runtime_error(Imm::get_err_msg(*this));
             if(max_bit_len > 0 && bit_len > max_bit_len) bit_len = max_bit_len;
@@ -180,10 +156,6 @@ namespace SASS {
     class F32Imm : public Imm {
     public:
         F32Imm() noexcept : Imm(true, 32, func_F32Imm) {}
-        F32Imm(const F32Imm& other) noexcept : Imm(other) {}
-        F32Imm(F32Imm&& other) noexcept : Imm(other) {}
-        F32Imm operator=(const F32Imm& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
-        F32Imm operator=(F32Imm&& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
         TDomain get_domain(bool is_address, int bit_len, bool has_max_val, int max_val, int max_bit_len) const override {
             if(bit_len == 0) throw std::runtime_error(Imm::get_err_msg(*this));
             if(max_bit_len > 0 && bit_len > max_bit_len) bit_len = max_bit_len;
@@ -193,10 +165,6 @@ namespace SASS {
     class BITSET : public Imm {
     public:
         BITSET(int bit_len) noexcept : Imm(false, bit_len, func_BITSET) {}
-        BITSET(const BITSET& other) noexcept : Imm(other) {}
-        BITSET(BITSET&& other) noexcept : Imm(other) {}
-        BITSET operator=(const BITSET& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
-        BITSET operator=(BITSET&& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
         TDomain get_domain(bool is_address, int bit_len, bool has_max_val, int max_val, int max_bit_len) const override {
             if(bit_len == 0) throw std::runtime_error(Imm::get_err_msg(*this));
             return Imm::get_func_domain_unsigned(is_address, bit_len, has_max_val, max_val);
@@ -205,10 +173,6 @@ namespace SASS {
     class E8M7Imm : public Imm {
     public:
         E8M7Imm() noexcept : Imm(true, 16, func_E8M7Imm) {}
-        E8M7Imm(const E8M7Imm& other) noexcept : Imm(other) {}
-        E8M7Imm(E8M7Imm&& other) noexcept : Imm(other) {}
-        E8M7Imm operator=(const E8M7Imm& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
-        E8M7Imm operator=(E8M7Imm&& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
         TDomain get_domain(bool is_address, int bit_len, bool has_max_val, int max_val, int max_bit_len) const override {
             if(bit_len == 0) throw std::runtime_error(Imm::get_err_msg(*this));
             if(max_bit_len > 0 && bit_len > max_bit_len) bit_len = max_bit_len;
@@ -218,10 +182,6 @@ namespace SASS {
     class E6M9Imm : public Imm {
     public:
         E6M9Imm() noexcept : Imm(true, 16, func_E6M9Imm) {}
-        E6M9Imm(const E6M9Imm& other) noexcept : Imm(other) {}
-        E6M9Imm(E6M9Imm&& other) noexcept : Imm(other) {}
-        E6M9Imm operator=(const E6M9Imm& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
-        E6M9Imm operator=(E6M9Imm&& other) noexcept { if(this == &other) return *this; Imm::operator=(other); return *this; }
         TDomain get_domain(bool is_address, int bit_len, bool has_max_val, int max_val, int max_bit_len) const override {
             if(bit_len == 0) throw std::runtime_error(Imm::get_err_msg(*this));
             if(max_bit_len > 0 && bit_len > max_bit_len) bit_len = max_bit_len;

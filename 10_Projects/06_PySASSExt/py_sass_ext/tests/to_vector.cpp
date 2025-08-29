@@ -136,6 +136,7 @@ int main()
     assert(check8_2);
     assert(check9_0);
     assert(check9_1);
+    assert(check10_0);
 
     // std::vector<Test_Type> vec = {
     //     {"oh no, am I in the way?", "this is so embarassing...", 1, 11.3f, 19.7}, 

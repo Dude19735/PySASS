@@ -115,17 +115,18 @@ namespace SASS {
             return { static_cast<TSize>(val.size()),  TVec(val.begin(), val.end())};
         }
 
-        static TVecPair to_bytes(const TOptions& val) {
+        template<typename TVal>
+        static TVecPair to_bytes(const std::unordered_map<std::string, TVal>& val){
             std::vector<uint8_t> res = size_to_vec(static_cast<TSize>(val.size()));
-            for(const std::pair<std::string, std::set<int>> v : val) {
+            for(const std::pair<std::string, TVal> v : val) {
                 TVec size = size_to_vec(static_cast<TSize>(v.first.size()));
                 res.insert(res.end(), size.begin(), size.end());
                 res.insert(res.end(), v.first.begin(), v.first.end());
-                TVec size2 = size_to_vec(static_cast<TSize>(v.second.size()));
+                
+                TVecPair val_vec = to_bytes(v.second);
+                TVec size2 = size_to_vec(val_vec.first);
                 res.insert(res.end(), size2.begin(), size2.end());
-                std::vector<int> vals(v.second.begin(), v.second.end());
-                TVec valsvec = intvec_to_vec(vals);
-                res.insert(res.end(), valsvec.begin(), valsvec.end());
+                res.insert(res.end(), val_vec.second.begin(), val_vec.second.end());
             }
             return { static_cast<TSize>(res.size()), res };
         }
@@ -269,32 +270,43 @@ namespace SASS {
             return std::string(tspan.begin() + from, tspan.begin() + to);
         }
 
-        template<typename T=TOptions> requires (UnorderedMap<T>)
-        static TOptions to_data(const size_t index, const SSpan& sspan, const TSpan& tspan) {
-            TOptions res;
-            TSize from = sspan[index];
-            TSize to = sspan[index+1];
-            const TSpan range(tspan.begin()+from, tspan.begin()+to);
-            const TSize count = *reinterpret_cast<const TSize*>(range.data());
-            TSpan::const_iterator iter = range.begin() + sizeof(TSize);
-            TSize counter = 0;
-            while(iter != range.end()) {
-                const TSize strs = *reinterpret_cast<const TSize*>(&*iter);
-                iter += sizeof(TSize);
-                std::string strval = std::string(iter, iter+strs);
-                iter += strs;
-                const TSize vals = *reinterpret_cast<const TSize*>(&*iter);
-                iter += sizeof(TSize);
-                std::set<int> iset;
-                for(TSize i=0; i<vals; ++i){
-                    iset.insert(*reinterpret_cast<const int*>(&*iter));
-                    iter += sizeof(int);
-                }
-                res.insert({strval, iset});
-                counter++;
+        template<typename T>
+        struct unpack_unordered_map {
+            static T to_data_set(size_t count, const TSpan& tspan) {
+                static_assert(false && "Unsupported std::set type: only std::string and int are suported at this time!");
+                return {};
             }
-            if(counter != count) throw std::runtime_error(std::vformat("Invalid depacking of TOptions: [{}] entries recovered, but should be [{}]", std::make_format_args(counter, count)));
-            return res;
+        };
+        template<typename TVal>
+        struct unpack_unordered_map<std::unordered_map<std::string, TVal>> {
+            static std::unordered_map<std::string, TVal> to_data_unordered_map(const size_t index, const SSpan& sspan, const TSpan& tspan){
+                std::unordered_map<std::string, TVal> res;
+                TSize from = sspan[index];
+                TSize to = sspan[index+1];
+                const TSpan range(tspan.begin()+from, tspan.begin()+to);
+                const TSize count = *reinterpret_cast<const TSize*>(range.data());
+                TSpan::const_iterator iter = range.begin() + sizeof(TSize);
+                TSize counter = 0;
+                while(iter != range.end()) {
+                    const TSize strs = *reinterpret_cast<const TSize*>(&*iter);
+                    iter += sizeof(TSize);
+                    std::string strval = std::string(iter, iter+strs);
+                    iter += strs;
+                    const TSize vals = *reinterpret_cast<const TSize*>(&*iter);
+                    iter += sizeof(TSize);
+                    TVal ival = to_data<TVal>(0, std::vector<TSize>{0, vals}, TSpan(iter, iter + vals));
+                    res.insert({strval, ival});
+                    iter += vals;
+                    counter++;
+                }
+                if(counter != count) throw std::runtime_error(std::vformat("Invalid depacking of TOptions: [{}] entries recovered, but should be [{}]", std::make_format_args(counter, count)));
+                return res;
+            }
+        };
+
+        template<typename T> requires (UnorderedMap<T>)
+        static T to_data(const size_t index, const SSpan& sspan, const TSpan& tspan) {
+            return unpack_unordered_map<T>::to_data_unordered_map(index, sspan, tspan);
         }
 
         template<typename T>
@@ -624,7 +636,7 @@ namespace SASS {
         }
         
         template<typename TVReal, typename TVState, size_t variant_type_size> requires (IsVariant<TVReal> && IsVariant<TVState>)
-        static std::vector<TVReal> muvh(const std::vector<TVState>& state_vec) {
+        static std::vector<TVReal> muv_vec_h(const std::vector<TVState>& state_vec) {
             std::vector<TVReal> vec; 
             vec.reserve(state_vec.size());
             std::transform(state_vec.begin(), state_vec.end(), std::back_inserter(vec), 
@@ -636,7 +648,7 @@ namespace SASS {
         }
 
         template<typename TVState, typename TVReal, size_t variant_type_size> requires (IsVariant<TVReal> && IsVariant<TVState>)
-        static std::vector<TVState> mpvh(const std::vector<TVReal>& vec) {
+        static std::vector<TVState> mpv_vec_h(const std::vector<TVReal>& vec) {
             std::vector<TVState> state_vec; 
             state_vec.reserve(vec.size());
             std::transform(vec.begin(), vec.end(), std::back_inserter(state_vec), 
@@ -647,6 +659,24 @@ namespace SASS {
             return state_vec;
         }
         
+        template<typename TKey, typename TVReal, typename TVState, size_t variant_type_size> requires (IsVariant<TVReal> && IsVariant<TVState>)
+        static std::unordered_map<TKey, TVReal> muv_umap_h(const std::unordered_map<TKey, TVState>& state_map) {
+            std::unordered_map<TKey, TVReal> map; 
+            for(const std::pair<TKey, TVState>& state : state_map) {
+                map.insert(std::pair<TKey, TVReal>{ state.first, _tunpack_variant<TVState, TVReal, 0, variant_type_size>(static_cast<size_t>(state.second.index()), state.second) }); 
+            }
+            return map;
+        }
+
+        template<typename TKey, typename TVState, typename TVReal, size_t variant_type_size> requires (IsVariant<TVReal> && IsVariant<TVState>)
+        static std::unordered_map<TKey, TVState> mpv_umap_h(const std::unordered_map<TKey, TVReal>& map) {
+            std::unordered_map<TKey, TVState> state_map; 
+            for(const std::pair<TKey, TVReal>& real_obj : map) {
+                state_map.insert(std::pair<TKey, TVState>{ real_obj.first, _tpack_variant<TVReal, TVState, 0, variant_type_size>(static_cast<size_t>(real_obj.second.index()), real_obj.second) }); 
+            }
+            return state_map;
+        }
+
         template<typename Ts, Ts... I>
         static void unpack(T& self, const BitVector& state, const std::integer_sequence<Ts, I...>& int_seq) {
             new(&self) T(std::visit([&](const auto& obj) { 

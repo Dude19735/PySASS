@@ -10,6 +10,7 @@ from py_sass_ext import TT_Ext
 from py_sass_ext import TT_Param
 from py_sass_ext import TT_CashComponent, TT_OpCashQuestion, TT_OpCashAnd, TT_OpCashAssign
 from py_sass_ext import TT_Cash
+from py_sass_ext import CashVector
 
 import time
 
@@ -31,6 +32,15 @@ c3 = TT_OpCashAssign()
 c1x = pickle.dumps(c1)
 c1r = pickle.loads(c1x)
 print(c1, c1r)
+
+# Op_Register: value == integer
+# Op_Int: value = integer
+# Op_Parameter: value = integer
+# Op_Constant: value = integer|string
+# Op_NotEnc: value = integer (fixed in call to super())
+# Op_Alias: value = TT_Reg, TT_Func
+# Op_Opcode: value = TT_ICode
+# Op_Set: value = Python set of strings
 
 # print(c1, c2, c3)
 

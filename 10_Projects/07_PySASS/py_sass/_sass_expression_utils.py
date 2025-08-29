@@ -102,6 +102,8 @@ class Op_AtOperand(Op_Operand):
         if not str(self) in enc_vals.keys(): raise Exception(sp.CONST__ERROR_UNEXPECTED)
         return enc_vals[str(self)]
     def __init__(self, name:str, term:object, tt_type:str, op_name:str):
+        if not isinstance(term, TT_OpAtAbs|TT_OpAtNot|TT_OpAtInvert|TT_OpAtNegate|TT_OpAtSign):
+            raise Exception(sp.CONST__ERROR_UNEXPECTED)
         super().__init__(self.operation_at, name + op_name, term)
         self.__TT_TYPE:str
         self.__OP_NAME:str

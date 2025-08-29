@@ -675,30 +675,30 @@ class SASS_Class_Props:
         :rtype: str
         """        
         return self.__opcode
-    @property
-    def register_set(self) -> set: 
-        """Almost all instruction classes use registers in their FORMAT definition.
+    # @property
+    # def register_set(self) -> set: 
+    #     """Almost all instruction classes use registers in their FORMAT definition.
 
-        This property contains a set with the aliases of all used register types. That includes for example 'Register' and 'UniformRegister'. For example:
-        * {'Ra', 'Pg', 'Rc', 'Rd', 'Rb', 'UPp'}
+    #     This property contains a set with the aliases of all used register types. That includes for example 'Register' and 'UniformRegister'. For example:
+    #     * {'Ra', 'Pg', 'Rc', 'Rd', 'Rb', 'UPp'}
 
-        :return: a set with all used register types aliases
-        :rtype: set
-        """        
-        return self.__format_tt.register_set
-    @property
-    def extension_set(self) -> set: 
-        """Almost all instruction classes have extensions. This property contains a set with the aliases of all extensions.
+    #     :return: a set with all used register types aliases
+    #     :rtype: set
+    #     """        
+    #     return set(self.__format_tt.register_set)
+    # @property
+    # def extension_set(self) -> set: 
+    #     """Almost all instruction classes have extensions. This property contains a set with the aliases of all extensions.
         
-        NOTE: that the extensions have some duality in their ENCODING where sometimes they use the parent register name and sometimes the alias. This property contains the one that is used in the ENCODING section.
+    #     NOTE: that the extensions have some duality in their ENCODING where sometimes they use the parent register name and sometimes the alias. This property contains the one that is used in the ENCODING section.
 
-        For example:
-        * {'ROWONLY', 'size', 'REUSE', 'reuse_src_a', 'row_A', 'LOGICAL_OP1_BMMA', 'POPCONLY', 'SIZE', 'op', 'reuse_src_b', 'accum', 'col_B', 'COLONLY'}
+    #     For example:
+    #     * {'ROWONLY', 'size', 'REUSE', 'reuse_src_a', 'row_A', 'LOGICAL_OP1_BMMA', 'POPCONLY', 'SIZE', 'op', 'reuse_src_b', 'accum', 'col_B', 'COLONLY'}
 
-        :return: a set with all extension aliases as used in the ENCODING section of the instruction class
-        :rtype: set
-        """        
-        return self.__format_tt.extension_set
+    #     :return: a set with all extension aliases as used in the ENCODING section of the instruction class
+    #     :rtype: set
+    #     """        
+    #     return set(self.__format_tt.extension_set)
     @property
     def min_wait_needed(self) -> int:
         """Minimum number of cycles required as given by the instruction PROPERTIES. min_wait_needed = 0 means, it's a fixed latency instruction with no barriers.

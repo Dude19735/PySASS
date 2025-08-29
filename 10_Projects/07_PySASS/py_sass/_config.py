@@ -116,6 +116,7 @@ if not 'CONST__ERROR_UNEXPECTED' in locals(): CONST__ERROR_UNEXPECTED = "Unexpec
 if not 'CONST__ERROR_ILLEGAL' in locals(): CONST__ERROR_ILLEGAL = "Illegal"
 if not 'CONST__ERROR_NOT_IMPLEMENTED' in locals(): CONST__ERROR_NOT_IMPLEMENTED = "Not implemented"
 if not 'CONST__ERROR_NOT_TESTED' in locals(): CONST__ERROR_NOT_TESTED = "Not tested"
+if not 'CONST__ERROR_DEPRECATED' in locals(): CONST__ERROR_DEPRECATED = "Attempted to run deprecated code!"
 
 if not 'CONST_NAME__SKIP' in locals(): CONST_NAME__SKIP = 'SKIP'
 if not 'CONST_NAME__FORMAT' in locals(): CONST_NAME__FORMAT = 'FORMAT'

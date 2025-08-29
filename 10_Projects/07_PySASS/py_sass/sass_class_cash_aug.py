@@ -61,6 +61,7 @@ class SASS_Class_Cash_Aug:
 
     @staticmethod
     def __replace_encoding(class_name:str, checks:dict, replacements:dict, format_tt:TT_Instruction, encodings:list, details:SM_Cu_Details):
+        raise Exception(sp.CONST__ERROR_DEPRECATED)
         # !!! used for useless cash augmentation => not used anymore, but here for reference !!!
         if not isinstance(class_name, str): raise Exception(sp.CONST__ERROR_UNEXPECTED)
         if not isinstance(checks, dict): raise Exception(sp.CONST__ERROR_UNEXPECTED)

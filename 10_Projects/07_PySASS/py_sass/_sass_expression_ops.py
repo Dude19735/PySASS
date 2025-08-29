@@ -12,12 +12,13 @@ from py_sass_ext import SASS_Bits
 from py_sass_ext import BitVector
 from ._sass_expression_utils import Op_ParamSplit, Op_Base, Op_Function, Op_UnaryOperator
 from ._sass_expression_utils import Op_Operand, Op_DualOperator, Op_Control, Op_AtOperand
-from ._tt_terms import TT_ICode
+from ._tt_terms import TT_ICode, TT_Reg, TT_Func
 
 class Op_NotEnc(Op_Operand):
     A=sp.EXPR_OP_ASSOCIATIV_GROUP_NONE
     P=sp.EXPR_OP_PRECEDENCE_NR_NONE
-    def __init__(self, code_name:str): super().__init__(None, code_name, 0)
+    def __init__(self, code_name:str):
+        super().__init__(None, code_name, 0)
     def __str__(self): return "!_(" + Op_Base.__str__(self) + ")_"
 #######################################################################################################################################
 #######################################################################################################################################
@@ -256,6 +257,8 @@ class Op_Parameter(Op_Operand):
         if not isinstance(val, int): raise Exception(sp.CONST__ERROR_ILLEGAL)
         return SASS_Bits.from_int(val, signed=0)
     def __init__(self, name:str, value): 
+        if not isinstance(value, int):
+            raise Exception(sp.CONST__ERROR_UNEXPECTED)
         super().__init__(self.parameter_operation, name, value)
     def __str__(self): return '%'+ Op_Operand.__str__(self)
     def v_str(self): return type(self).__name__ + "[{0}]".format('%'+str(self))
@@ -266,7 +269,9 @@ class Op_Constant(Op_Operand):
         val = self.value()
         if not isinstance(val, int): raise Exception(sp.CONST__ERROR_ILLEGAL)
         return SASS_Bits.from_int(val, signed=0)
-    def __init__(self, name:str, value): 
+    def __init__(self, name:str, value):
+        if not isinstance(value, int|str):
+            raise Exception(sp.CONST__ERROR_UNEXPECTED) 
         super().__init__(self.constant_operation, name, value)
 class Op_Register(Op_Operand):
     A=sp.EXPR_OP_ASSOCIATIV_GROUP_OPERAND
@@ -319,6 +324,8 @@ class Op_Opcode(Op_Operand):
         bin_tup:tuple = val.bin_tup # type: ignore
         return SASS_Bits(BitVector(bin_tup), bit_len=len(bin_tup), signed=False)
     def __init__(self, name:str, term): 
+        if not isinstance(term, TT_ICode):
+            raise Exception(sp.CONST__ERROR_UNEXPECTED)
         super().__init__(self.opcode_operation, name, str(term))
         self.__term = term
     def term(self): return self.__term
@@ -329,6 +336,8 @@ class Op_Alias(Op_Operand):
         if not str(self) in enc_vals.keys(): raise Exception(sp.CONST__ERROR_UNEXPECTED)
         return enc_vals[str(self)]
     def __init__(self, name:str, term): 
+        if not isinstance(term, TT_Reg|TT_Func):
+            raise Exception(sp.CONST__ERROR_UNEXPECTED)
         super().__init__(self.alias_operation, name, term)
 #######################################################################################################################################
 #######################################################################################################################################
@@ -360,7 +369,10 @@ class Op_Set(Op_Operand):
     def operation_set(self, arg): return self.value()
     def __init__(self, val:set): 
         if not isinstance(val, set): raise Exception(sp.CONST__ERROR_ILLEGAL)
-        super().__init__(self.operation_set, "{...}", {v.value() for v in val})
+        new_val:typ.Set[str] = {v.value() for v in val}
+        if not (isinstance(new_val, set) and all(isinstance(x, str) for x in new_val)):
+            raise Exception(sp.CONST__ERROR_ILLEGAL)
+        super().__init__(self.operation_set, "{...}", new_val)
     def __str__(self):
         return "{{{0}}}".format(", ".join(str(i) for i in self.value())) # type: ignore
 #######################################################################################################################################

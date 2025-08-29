@@ -20,7 +20,7 @@ class TT_Instruction:
     It also contains all the methods necessary to translate a list of TT_Terms into nicer TT_Param, TT_Opcode, TT_Predicate and TT_Cash
     """
     def __init__(self,pred, opcode, regs, cashs):
-        self.class_name = "N/A"
+        self.class_name = "N/A" # This one is set in the parser manually because the class_name is not accessible at object creation time
         self.pred = pred
         self.opcode = opcode
         # self.dst = dst
@@ -50,6 +50,7 @@ class TT_Instruction:
     def default_enc_vals(self) -> dict: return self.__default_enc_vals
 
     def add_default_enc_vals(self, alias:str, default_val:SASS_Bits):
+        raise Exception(sp.CONST__ERROR_DEPRECATED)
         if not isinstance(alias, str): raise Exception(sp.CONST__ERROR_ILLEGAL)
         if not isinstance(default_val, SASS_Bits): raise Exception(sp.CONST__ERROR_ILLEGAL)
         self.__default_enc_vals[alias] = default_val

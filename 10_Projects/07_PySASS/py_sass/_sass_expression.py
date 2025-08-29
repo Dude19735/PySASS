@@ -191,6 +191,7 @@ class SASS_Expr:
         return True
 
     def backwars_replace(self, alias_args:typ.List[typ.Dict], instr:TT_Instruction, instr_candidates:typ.List[TT_Instruction]):
+        raise Exception(sp.CONST__ERROR_UNEXPECTED)
         if len(self.__split) == 0: return
         # match up
         op_ii = Op_Iter(self.__split[0][0]) # type: ignore

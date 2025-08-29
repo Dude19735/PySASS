@@ -851,7 +851,7 @@ def test_list_operands(sass:SM_SASS):
         f.write("==========================\n")
         f.write(mem_access_patterns)
 
-if __name__ == '__main__':
+if __name__ == '__main__' or True:
     def dict_to_str(dd:dict):
         return {k:(v if 
                    isinstance(v, str|int|float) 
@@ -881,12 +881,12 @@ if __name__ == '__main__':
     sp.GLOBAL__CASH_EXPR = dict()
     sp.GLOBAL__CASH_EXPR_EXTRA = dict()
     conditions_count = []
-    # for sm in sms:
-    #     # t0 = time.time()
-    #     # sass = SM_SASS(sm, reparse=True, finalize=True, opcode_gen=True, lookup_gen=True, web_crawl=False, collect_statistics=False)
-    #     sass = SM_SASS(sm, reparse=False, finalize=False, opcode_gen=False, lookup_gen=False, web_crawl=False, collect_statistics=False)
-    #     jj = sass.lu_to_json()
-    #     pass
+    for sm in sms:
+        # t0 = time.time()
+        sass = SM_SASS(sm, reparse=True, finalize=True, opcode_gen=True, lookup_gen=True, web_crawl=False, collect_statistics=False)
+        # sass = SM_SASS(sm, reparse=False, finalize=False, opcode_gen=False, lookup_gen=False, web_crawl=False, collect_statistics=False)
+        jj = sass.lu_to_json()
+        pass
 
     SM_SASS.create_lookup_db(sms)
         # test_list_operands(sass)

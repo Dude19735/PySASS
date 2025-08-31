@@ -123,8 +123,12 @@ from ._sass_expression_ops import Op_Constant
 from ._sass_expression import SASS_Expr
 from ._sass_expression_domain_contract import SASS_Expr_Domain_Contract
 from ._tt_instruction import TT_Instruction
+from py_sass_ext import TT_Instruction as cTT_Instruction
 from ._tt_term import TT_Term
-from ._tt_terms import TT_Func, TT_Reg, TT_List, TT_Param, TT_Pred, TT_Cash
+if not sp.SWITCH__USE_TT_EXT:
+    from ._tt_terms import TT_Func, TT_Reg, TT_List, TT_Param, TT_Pred, TT_Cash
+else:
+    from py_sass_ext import TT_Func, TT_Reg, TT_List, TT_Param, TT_Pred, TT_Cash
 from ._sass_class import _SASS_Class
 from ._iterator import Iterator
 from .sm_cu_details import SM_Cu_Details
@@ -165,13 +169,18 @@ class SASS_Class:
         if len(bin_ind_l) != 1: raise Exception(sp.CONST__ERROR_UNEXPECTED)
         format_tt.add_opcode_bin(self.OPCODES, bin_ind_l[0]['code_ind'])
 
+        # Transform the objects to their CPP equivalents
+        format_tt2:cTT_Instruction
+        format_tt2 = format_tt.to_cpp()
+        self.FORMAT = format_tt2
+
         # finalize the conditions: replace all remaining Op_Value with other stuff
         cond_types = details.ARCHITECTURE.CONDITION['TYPES'] # type: ignore
         for x in self.CONDITIONS:
             if not x['code'] in cond_types.keys():
                 raise Exception("Class {0}: condition type {1} not defined".format(class_name, x))
             expr:SASS_Expr = x['expr']
-            expr.finalize(format_tt.eval)
+            expr.finalize(format_tt2.eval)
             if expr.is_int() and expr.get_first_value() == 0:
                 # there are a few instructions that have one condition that looks like this (or something like it)
                 # ILLEGAL_INSTR_ENCODING_SASS_ONLY_ERROR
@@ -185,13 +194,13 @@ class SASS_Class:
         for x in self.PROPERTIES:
             if not x in op_props: raise Exception("Class {0}: property {1} not defined".format(class_name, x))
             expr:SASS_Expr = self.PROPERTIES[x]
-            expr.finalize(format_tt.eval)
+            expr.finalize(format_tt2.eval)
 
         op_preds = set(details.OPERATION.PREDICATES) # type: ignore
         for x in self.PREDICATES:
             if not x in op_preds: raise Exception("Class {0}: predicates {1} not defined".format(class_name, x))
             expr:SASS_Expr = self.PREDICATES[x]
-            expr.finalize(format_tt.eval)
+            expr.finalize(format_tt2.eval)
 
         for ee in self.ENCODING:
             x = ee['code_name']
@@ -204,7 +213,7 @@ class SASS_Class:
             elif not x in details.FUNIT.encoding.keys(): raise Exception("Class {0}: funit encoding {1} not defined".format(class_name, x)) # type: ignore
             if isinstance(ee['alias'], SASS_Expr):
                 expr:SASS_Expr = ee['alias']
-                res = expr.finalize(format_tt.eval)
+                res = expr.finalize(format_tt2.eval)
         
         # Calculate some convenience short-cuts
         self.enc_alias_expr = [(i['alias'], [tuple(ind for ind,j in enumerate(c) if j=='1') for c in i['code']]) for i in self.ENCODING]
@@ -227,22 +236,22 @@ class SASS_Class:
         self.funit_mask_hash = self.funit_mask_str.__hash__()
 
         # get all modifiers that have unique values
-        opc_mod = [(str(ext.alias), str(ext.value.value)) for ext in format_tt.opcode.extensions]
+        opc_mod = [(str(ext.alias), str(ext.value.value)) for ext in format_tt2.opcode.extensions]
         self.opc_mod = SASS_Class.mod_to_useful(self, opc_mod)
 
-        reg_mod = list(itt.chain.from_iterable([[(str(ext.alias), str(ext.value.value)) for ext in reg.extensions] for reg in format_tt.regs if reg.extensions]))
+        reg_mod = list(itt.chain.from_iterable([[(str(ext.alias), str(ext.value.value)) for ext in reg.extensions] for reg in format_tt2.regs if reg.extensions]))
         self.reg_mod = SASS_Class.mod_to_useful(self, reg_mod)
-        self.__pt = SASS_Class.get_PT(False, self.details, self.ENCODING, format_tt)
-        self.__not_pt = SASS_Class.get_PT(True, self.details, self.ENCODING, format_tt)
+        self.__pt = SASS_Class.get_PT(False, self.details, self.ENCODING, format_tt2)
+        self.__not_pt = SASS_Class.get_PT(True, self.details, self.ENCODING, format_tt2)
         self.__const_size_order, self.__const_size_sizes = SASS_Class.calculate_const_size_sets(self.class_name, self.PREDICATES, self.ENCODING)
-        self.__used_regs, self.__reuse_regs =  format_tt.get_used_regs_and_reuse(details)
+        self.__used_regs, self.__reuse_regs =  format_tt2.get_used_regs_and_reuse(details)
 
         # SASS_Class.resolve_size_mappings(self)
         # self.__non_const_preds = self.get_non_const_preds()
         # if class_name == 'arrives_':
         #     pass
         self.__props = SASS_Class_Props(
-            format_tt, 
+            format_tt2, 
             self.OPCODES['opcode']['i'], self.OPCODES['set'],
             self.PROPERTIES, self.PREDICATES, self.ENCODING, self.IS_ALTERNATE,
             self.details)

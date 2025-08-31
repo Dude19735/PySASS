@@ -3,7 +3,10 @@ import typing
 import itertools as itt
 from . import _config as sp
 from ._sass_expression import SASS_Expr
-from ._tt_terms import TT_Reg, TT_List, TT_Param
+if not sp.SWITCH__USE_TT_EXT:
+    from ._tt_terms import TT_Reg, TT_List, TT_Param
+else:
+    from py_sass_ext import TT_Reg, TT_List, TT_Param
 from ._instr_enc_dec_lookup import Instr_EncDec_Lookup
 from .sm_cu_details import SM_Cu_Details
 from .sass_class import SASS_Class

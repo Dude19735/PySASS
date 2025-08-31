@@ -5,7 +5,10 @@ All kinds of expressions that yield some sort of result
 from __future__ import annotations
 import termcolor
 from . import _config as sp
-from ._tt_terms import TT_Reg, TT_Func
+if not sp.SWITCH__USE_TT_EXT:
+    from ._tt_terms import TT_Reg, TT_Func
+else:
+    from py_sass_ext import TT_Reg, TT_Func
 from ._sass_expression_ops import *
 # from ._sass_expression_domain_range import SASS_Expr_Domain_Range
 from py_sass_ext import SASS_Bits

@@ -2,7 +2,10 @@ import os
 import itertools as itt
 from . import _config as sp
 from ._sass_expression import SASS_Expr
-from ._tt_terms import TT_Reg, TT_List, TT_Param
+if not sp.SWITCH__USE_TT_EXT:
+    from ._tt_terms import TT_Reg, TT_List, TT_Param
+else:
+    from py_sass_ext import TT_Reg, TT_List, TT_Param
 from .sm_sass import SM_SASS
 from .sass_class import SASS_Class
 from .sass_class import SASS_Class

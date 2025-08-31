@@ -12,7 +12,10 @@ from ._sass_expression_ops import Op_Defined, Op_Not
 from ._sass_expression import SASS_Expr
 from ._instr_enc_dec_gen import Instr_EncDec_Gen
 from ._instr_enc_dec_lookup import Instr_EncDec_Lookup
-from ._tt_terms import TT_List, TT_Reg, TT_Func
+if not sp.SWITCH__USE_TT_EXT:
+    from ._tt_terms import TT_List, TT_Reg, TT_Func
+else:
+    from py_sass_ext import TT_List, TT_Reg, TT_Func
 from .sass_class import SASS_Class
 from .sass_class_props import SASS_Class_Props
 from .sass_parser_iter import SASS_Parser_Iter

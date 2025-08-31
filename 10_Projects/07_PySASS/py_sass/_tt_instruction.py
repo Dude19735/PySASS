@@ -1,11 +1,21 @@
 import typing
 import itertools as itt
 from py_sass_ext import SASS_Bits
+from py_sass_ext import TT_Instruction as cTT_Instruction
+from py_sass_ext import TT_Pred as cTT_Pred
+from py_sass_ext import TT_NoPred as cTT_NoPred
+from py_sass_ext import TT_AttrParam as cTT_AttrParam
+from py_sass_ext import TT_Param as cTT_Param
+from py_sass_ext import TT_Opcode as cTT_Opcode
+from py_sass_ext import TT_Cash as cTT_Cash
 from . import _config as sp
+from ._tt_term import TT_Term
 from ._tt_terms import TT_Pred, TT_Opcode, TT_Param, TT_List, TT_Reg, TT_ICode
 from ._tt_terms import TT_Func, TT_Cash
-from ._tt_term import TT_Term
 from ._tt_terms import TT_OpAtAbs, TT_OpAtInvert, TT_OpAtNegate, TT_OpAtNot, TT_OpAtSign
+# from py_sass_ext import TT_Pred, TT_Opcode, TT_Param, TT_List, TT_Reg, TT_ICode
+# from py_sass_ext import TT_Func, TT_Cash
+# from py_sass_ext import TT_OpAtAbs, TT_OpAtInvert, TT_OpAtNegate, TT_OpAtNot, TT_OpAtSign
 from .sm_cu_details import SM_Cu_Details
 
 class TT_Instruction:
@@ -211,11 +221,6 @@ class TT_Instruction:
         self.eval_alias.update(self.opcode.eval_alias)
         self.operand_index.extend(self.opcode.operand_index)
         
-        # if self.dst:
-        #     self.dst:TT_Param|TT_List = self.to_param(self.dst, sm_details)
-        #     self.eval.update(self.dst.eval)
-        #     self.eval_alias.update(self.dst.eval_alias)
-        #     self.operand_index.extend(self.dst.operand_index)
         if self.regs:
             regs = []
             for r in self.regs:
@@ -248,6 +253,46 @@ class TT_Instruction:
 
         self.sm_details = sm_details
 
+    def to_cpp(self) -> cTT_Instruction:
+        pred:cTT_Pred|cTT_NoPred
+        if self.pred is not None: pred = self.pred.to_cpp()
+        else: pred = cTT_NoPred()
+        opcode = self.opcode.to_cpp()
+        regs = [r.to_cpp() for r in self.regs]
+        cashs = [c.to_cpp() for c in self.cashs]
+
+        instr = cTT_Instruction(self.class_name, pred, opcode, regs, cashs)
+
+        str_old = str(self)
+        str_new = str(instr)
+        if not (str_old == str_new): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+
+        eval_old = self.eval
+        eval_new = instr.eval
+
+        eval_old_str = {k:str(v) for k,v in sorted(eval_old.items())}
+        eval_new_str = {k:str(v) for k,v in sorted(eval_new.items())}
+        if not (eval_old_str == eval_new_str): raise Exception(sp.CONST__ERROR_ILLEGAL)
+
+        if self.pred:
+            pred_old_enc_vals = sorted(self.pred.get_enc_alias())
+            pred_new_enc_vals = sorted(instr.pred.get_enc_alias())
+            if not (pred_old_enc_vals == pred_new_enc_vals): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+
+        opcode_old_enc_vals = sorted(self.opcode.get_enc_alias())
+        opcode_new_enc_vals = sorted(instr.opcode.get_enc_alias())
+        if not (opcode_old_enc_vals == opcode_new_enc_vals): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+
+        regs_old_enc_vals = [sorted(i.get_enc_alias()) for i in self.regs]
+        regs_new_enc_vals = [sorted(i.get_enc_alias()) for i in instr.regs]
+        if not (all(i==j for i,j in zip(regs_old_enc_vals, regs_new_enc_vals))): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+
+        cashs_old_enc_vals = [sorted(i.get_enc_alias()) for i in self.cashs]
+        cashs_new_enc_vals = [sorted(i.get_enc_alias()) for i in instr.cashs]
+        if not (all(i==j for i,j in zip(cashs_old_enc_vals, cashs_new_enc_vals))): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+
+        return instr
+
     def __str__(self):
         """
         This __str__ method should approximately ouptut the same as is in the instructions.txt file
@@ -257,7 +302,7 @@ class TT_Instruction:
         if self.pred:
             val[-1] += ' PREDICATE ' + str(self.pred)
 
-        val.append(str(self.opcode))
+        val[-1] += (' ' + str(self.opcode))
         # if self.dst:
         #     val.append("   " + str(self.dst))
         if self.regs:

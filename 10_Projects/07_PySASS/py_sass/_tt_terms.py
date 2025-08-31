@@ -18,6 +18,30 @@ from ._sass_util import SASS_Util as su
 from .sm_cu_details import SM_Cu_Details
 from py_sass_ext import SASS_Bits
 from py_sass_ext import BitVector
+from py_sass_ext import OptionsDict, CashComponentsVector, ExtVector, ParamVector, OpsVector, ListVector
+from py_sass_ext import TT_Alias as cTT_Alias
+from py_sass_ext import TT_Reg as cTT_Reg
+from py_sass_ext import TT_Pred as cTT_Pred
+from py_sass_ext import TT_AtOp as cTT_AtOp
+from py_sass_ext import TT_AttrParam as cTT_AttrParam
+from py_sass_ext import TT_Param as cTT_Param
+from py_sass_ext import TT_Cash as cTT_Cash
+from py_sass_ext import TT_Default as cTT_Default
+from py_sass_ext import TT_Ext as cTT_Ext
+from py_sass_ext import TT_Func as cTT_Func
+from py_sass_ext import TT_FuncArg as cTT_FuncArg
+from py_sass_ext import TT_NoDefault as cTT_NoDefault
+from py_sass_ext import TT_ICode as cTT_ICode
+from py_sass_ext import TT_List as cTT_List
+from py_sass_ext import TT_Opcode as cTT_Opcode
+from py_sass_ext import TT_OpAtAbs as cTT_OpAtAbs
+from py_sass_ext import TT_OpAtSign as cTT_OpAtSign
+from py_sass_ext import TT_OpAtNot as cTT_OpAtNot
+from py_sass_ext import TT_OpAtInvert as cTT_OpAtInvert
+from py_sass_ext import TT_OpAtNegate as cTT_OpAtNegate
+from py_sass_ext import TT_OpCashQuestion as cTT_OpCashQuestion
+from py_sass_ext import TT_OpCashAssign as cTT_OpCashAssign
+from py_sass_ext import TT_OpCashAnd as cTT_OpCashAnd
 
 class TT_OverrideError(Exception):
     def __init__(self, message): super().__init__(message)
@@ -49,6 +73,7 @@ class TT_Alias:
     def set_decode_value(self, decode_value:SASS_Bits) -> None: raise Exception("Illegal")
     def get_decode_value(self) -> None: raise Exception("Illegal")
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
+    def to_cpp(self) -> cTT_Alias: return cTT_Alias(self.value)
 
 class TT_Op:
     """
@@ -108,6 +133,7 @@ class TT_OpAtNot(TT_Base):
     def has_func(self): return False
     def space_size(self): return TT_Op.space_size()
     def get_domain(self, to_limit:dict): return TT_Op.get_domain()
+    def to_cpp(self) -> cTT_OpAtNot: return cTT_OpAtNot(self.__reg_alias)
 class TT_OpAtNegate(TT_Base):
     """
     This one represents [-]
@@ -145,6 +171,7 @@ class TT_OpAtNegate(TT_Base):
     def has_func(self): return False
     def space_size(self): return TT_Op.space_size()
     def get_domain(self, to_limit:dict): return TT_Op.get_domain()
+    def to_cpp(self) -> cTT_OpAtNegate: return cTT_OpAtNegate(self.__reg_alias)
 class TT_OpAtAbs(TT_Base):
     """
     This one represents [!!]
@@ -182,6 +209,7 @@ class TT_OpAtAbs(TT_Base):
     def has_func(self): return False
     def space_size(self): return TT_Op.space_size()
     def get_domain(self, to_limit:dict): return TT_Op.get_domain()
+    def to_cpp(self) -> cTT_OpAtAbs: return cTT_OpAtAbs(self.__reg_alias)
 class TT_OpAtSign(TT_Base):
     """
     This one represents [&&] (somehow I can't find it anymore XD)
@@ -226,6 +254,7 @@ class TT_OpAtSign(TT_Base):
         self.__func = func
     def space_size(self): return TT_Op.space_size()
     def get_domain(self, to_limit:dict): return TT_Op.get_domain()
+    def to_cpp(self) -> cTT_OpAtSign: return cTT_OpAtSign(self.__reg_alias)
 class TT_OpAtInvert(TT_Base):
     """
     This one represents [~]
@@ -263,7 +292,7 @@ class TT_OpAtInvert(TT_Base):
     def has_func(self): return False
     def space_size(self): return TT_Op.space_size()
     def get_domain(self, to_limit:dict): return TT_Op.get_domain()
-    # def mock(self, sm_details:SM_Cu_Details, rand_seed:int, max_bit_len:int): return TT_Op.mock(self.__op_name, sm_details, rand_seed)
+    def to_cpp(self) -> cTT_OpAtInvert: return cTT_OpAtInvert(self.__reg_alias)
 class TT_OpCashQuestion:
     """
     This one represents '?'
@@ -278,6 +307,7 @@ class TT_OpCashQuestion:
     def set_decode_value(self, decode_value:SASS_Bits) -> None: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def get_decode_value(self) -> None: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
+    def to_cpp(self) -> cTT_OpCashQuestion: return cTT_OpCashQuestion()
 class TT_OpCashAnd:
     """
     This one represents '&'
@@ -292,6 +322,7 @@ class TT_OpCashAnd:
     def set_decode_value(self, decode_value:SASS_Bits) -> None: raise Exception("Illegal")
     def get_decode_value(self) -> None: raise Exception("Illegal")
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
+    def to_cpp(self) -> cTT_OpCashAnd: return cTT_OpCashAnd()
 class TT_OpCashAssign:
     """
     This one represents '='
@@ -306,6 +337,7 @@ class TT_OpCashAssign:
     def set_decode_value(self, decode_value:SASS_Bits) -> None: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def get_decode_value(self) -> None: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
+    def to_cpp(self) -> cTT_OpCashAssign: return cTT_OpCashAssign()
 class TT_Default(TT_Base):
     def __init__(self, class_name:str, def_name, has_print, options):
         self.class_name = class_name
@@ -315,7 +347,6 @@ class TT_Default(TT_Base):
         self.has_print = has_print
         if not self.value in self.options:
             raise Exception("TT_Default for class {0} has a value {1} not contained in options {2}".format(class_name, self.value, options))
-    # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def __str__(self):
         res = str(self.value)
         if self.has_print: res += '/PRINT'
@@ -324,6 +355,7 @@ class TT_Default(TT_Base):
     def get_decode_value(self) -> None: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def space_size(self): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
+    def to_cpp(self) -> cTT_Default: return cTT_Default(self.value, self.has_print, self.options)
     @staticmethod
     def tt(): return 'default'
 class TT_FuncArg:
@@ -353,7 +385,6 @@ class TT_FuncArg:
             self.has_default = True
         else:
             self.bit_len = self.arg_val
-    # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def __str__(self): return str(self.arg_val)
     def space_size(self):
         if self.has_max_val: return self.max_val
@@ -369,6 +400,7 @@ class TT_FuncArg:
     def set_max_val(self, max_val):
         self.max_val = max_val
         self.has_max_val = True
+    def to_cpp(self) -> cTT_FuncArg: return cTT_FuncArg(self.arg_val, self.has_star, self.has_print, self.bit_len, self.has_default, self.default_val, self.has_max_val, self.max_val)
 class TT_Reg(TT_Base):
     def __init__(self, class_name:str, reg_name:str, arg_default:TT_Default|None, options):
         if not isinstance(class_name, str): raise Exception(sp.CONST__ERROR_ILLEGAL)
@@ -434,6 +466,9 @@ class TT_Reg(TT_Base):
         return self.__decode_value
     def eval_str(self) -> str: raise Exception("Unexpected behaviour exception")
     def space_size(self): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
+    def to_cpp(self) -> cTT_Reg: 
+        if self.arg_default is None: return cTT_Reg(self.value, cTT_NoDefault(), self.options[self.value], self.alias.to_cpp())
+        else: return cTT_Reg(self.value, self.arg_default.to_cpp(), self.options[self.value], self.alias.to_cpp())
     @staticmethod
     def tt(): return 'reg'
 class TT_ICode(TT_Base):
@@ -453,7 +488,6 @@ class TT_ICode(TT_Base):
         self.bin_str = bin_str
         self.bin_ind = bin_ind
         self.bin_tup = tuple(int(i) for i in self.bin_str.replace('_',''))
-    # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr): raise Exception("Illegal")
     def __str__(self): return 'Opcode'
     def set_decode_value(self, decode_value:SASS_Bits) -> None:
         if self.__decode_value is not None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
@@ -466,9 +500,7 @@ class TT_ICode(TT_Base):
         return self.__decode_value
     def eval_str(self) -> str: raise Exception("Illegal")
     def space_size(self): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
-    # def mock(self, sm_details:SM_Cu_Details, rand_seed:int, max_bit_len:int): 
-    #     if not self.bin_tup: raise Exception("Illegal mock attempt (no bin_code assigned yet)")
-    #     return SASS_Bits(self.bin_tup, bit_len=0, signed=False)
+    def to_cpp(self) -> cTT_ICode: return cTT_ICode(self.bin_str, self.bin_ind[0], self.bin_tup)
 class TT_Func(TT_Base):
     def __init__(self, class_name:str, func_name:str, alias:str, arg_default:TT_FuncArg, options:set, star:bool):
         if not isinstance(options, set): raise Exception(sp.CONST__ERROR_UNEXPECTED)
@@ -537,8 +569,7 @@ class TT_Func(TT_Base):
     def eval_str(self) -> str: raise Exception("Unexpected behaviour exception")
     def set_for_constBank(self, sm_details:SM_Cu_Details): self.arg_default.set_max_val(sm_details.PARAMETERS.MAX_CONST_BANK) # type: ignore
     def set_for_addr(self): self.is_address = True
-    # def mock(self, sm_details:SM_Cu_Details, rand_seed:int, max_bit_len:int):
-    #     return self.func.mock(rand_seed, self.is_address, self.arg_default.bit_len, self.arg_default.has_default, self.arg_default.default_val, self.arg_default.has_max_val, self.arg_default.max_val, max_bit_len)
+    def to_cpp(self) -> cTT_Func: return cTT_Func(self.value, self.options, self.arg_default.to_cpp(), self.star, self.is_address, cTT_Alias(self.alias))
     @staticmethod
     def tt(): return 'func'
 ###########################################################################################
@@ -615,7 +646,7 @@ class TT_Pred:
     def get_decode_value(self) -> SASS_Bits: raise Exception(sp.CONST__ERROR_ILLEGAL)
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def space_size(self): raise Exception(sp.CONST__ERROR_ILLEGAL)
-    # def mock(self, sm_details:SM_Cu_Details, rand_seed:int, max_bit_len:int): raise Exception(sp.CONST__ERROR_ILLEGAL)
+    def to_cpp(self) -> cTT_Pred: return cTT_Pred(self.alias.to_cpp(), self.value.to_cpp(), self.ops[0].to_cpp())
     @staticmethod
     def tt(): return 'pred'
 class TT_Ext(TT_Base):
@@ -682,14 +713,6 @@ class TT_Ext(TT_Base):
         if not old == new:
             raise Exception("TT_Ext {0} for class {1} has unknown_def".format(str(tt_term), self.class_name))            
         
-    # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr):
-    #     TTs_Utils.call_checkArgs_1(args)
-    #     TTs_Utils.call_enforceNoOverride(self.__decode_value)
-    #     arg = args['arg']
-    #     if isinstance(arg, SASS_Bits): self.__decode_value = arg
-    #     elif isinstance(arg, str): raise Exception("Never happening guard")
-    #     else: raise Exception("Unknown type for arg")
-    #     return self.__decode_value
     def __str__(self):
         res = '/'
         res += str(self.value)
@@ -706,7 +729,7 @@ class TT_Ext(TT_Base):
         return self.__decode_value
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def space_size(self): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
-    # def mock(self, sm_details:SM_Cu_Details, rand_seed:int, max_bit_len:int): return self.value.mock(sm_details, rand_seed, max_bit_len)
+    def to_cpp(self) -> cTT_Ext: return cTT_Ext(self.alias.to_cpp(), self.value.to_cpp(), self.is_at_alias)
     @staticmethod
     def tt(): return 'ext'
 class TT_Opcode:
@@ -786,7 +809,7 @@ class TT_Opcode:
     def get_decode_value(self) -> SASS_Bits: raise Exception("Unassigned value")
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def space_size(self): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
-    # def mock(self, sm_details:SM_Cu_Details, rand_seed:int, max_bit_len:int): raise Exception(sp.CONST__ERROR_ILLEGAL)
+    def to_cpp(self) -> cTT_Opcode: return cTT_Opcode(self.alias.to_cpp(), self.value.to_cpp(), [ext.to_cpp() for ext in self.extensions])
     @staticmethod
     def tt(): return 'Opcode'
 class TT_List:
@@ -836,7 +859,7 @@ class TT_List:
             for e in self.extensions:
                 res += " " + e.eval_str()
         return res
-    # def mock(self, sm_details:SM_Cu_Details, rand_seed:int, max_bit_len:int): raise Exception(sp.CONST__ERROR_ILLEGAL)
+    def to_cpp(self) -> cTT_List: return cTT_List([p.to_cpp() for p in self.value], [ext.to_cpp() for ext in self.extensions])
     @staticmethod
     def tt(): return 'list'
 class TT_Accessor:
@@ -1138,7 +1161,11 @@ class TT_Param:
     def get_decode_value(self) -> SASS_Bits: raise Exception(sp.CONST__ERROR_ILLEGAL)
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def space_size(self): raise Exception(sp.CONST__ERROR_ILLEGAL)
-    # def mock(self, sm_details:SM_Cu_Details, rand_seed:int, max_bit_len:int): raise Exception(sp.CONST__ERROR_ILLEGAL)
+    def to_cpp(self) -> cTT_AttrParam|cTT_Param:
+        if self.attr:
+            return cTT_AttrParam(self.alias.to_cpp(), [o.to_cpp() for o in self.ops], self.value.to_cpp(), [a.to_cpp() for a in self.attr], [ext.to_cpp() for ext in self.extensions], self.is_at_alias, self.has_attr_star)
+        else:
+            return cTT_Param(self.alias.to_cpp(), [o.to_cpp() for o in self.ops], self.value.to_cpp(), [ext.to_cpp() for ext in self.extensions], self.is_at_alias, self.has_attr_star)
     @staticmethod
     def tt(): return 'param'
 class TT_Cash:
@@ -1209,7 +1236,6 @@ class TT_Cash:
         
         return TT_Param(class_name, tt_term, cu_sm_details)
         
-    # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def __str__(self):
         res = '$( { '
         for i in self.values:
@@ -1226,6 +1252,6 @@ class TT_Cash:
             res += i.eval_str() + " "
         res += '} )$'
         return res
-    # def mock(self, sm_details:SM_Cu_Details, rand_seed:int, max_bit_len:int): raise Exception(sp.CONST__ERROR_ILLEGAL)
+    def to_cpp(self) -> cTT_Cash: return cTT_Cash([v.to_cpp() for v in self.values], self.added_later)
     @staticmethod
     def tt(): return '$'

@@ -199,6 +199,8 @@ if not 'GLOBAL__SERVER_LOAD_ALL' in locals(): GLOBAL__SERVER_LOAD_ALL = True
 
 if not 'CACHE__SM' in locals(): CACHE__SM = {}
 
+if not 'SWITCH__USE_TT_EXT' in locals(): SWITCH__USE_TT_EXT = True
+
 if not 'SM_LATENCY__ORDERED_ZERO' in locals(): SM_LATENCY__ORDERED_ZERO = "ORDERED_ZERO"
 if not 'SM_LATENCY__ORDERED_ZERO_VAL' in locals(): SM_LATENCY__ORDERED_ZERO_VAL = 0
 if not "SM_LATENCY__TABLE_OUTPUT" in locals(): SM_LATENCY__TABLE_OUTPUT = 'TABLE_OUTPUT'

@@ -14,7 +14,10 @@ from . import _config as sp
 from ._sass_expression import SASS_Expr
 from ._tt_instruction import TT_Instruction
 from ._tt_term import TT_Term
-from ._tt_terms import TT_Cash
+if not sp.SWITCH__USE_TT_EXT:
+    from ._tt_terms import TT_Cash
+else:
+    from py_sass_ext import TT_Cash
 from ._sass_class import _SASS_Class
 from .sass_class import SASS_Class
 from .sm_cu_details import SM_Cu_Details

@@ -8,7 +8,7 @@ from .sm_cu_props import SM_Cu_Props
 from ._sass_expression import SASS_Expr
 from ._sass_expression_dec import SASS_Expr_Dec
 from ._tt_instruction import TT_Instruction
-from ._tt_terms import *
+# from ._tt_terms import *
 from ._sass_expression_ops import *
 from ._sass_expression_domain_contract import SASS_Expr_Domain_Contract
 from ._sass_parser_arch import SASS_Parser_Arch

@@ -9,7 +9,10 @@ import typing as typ
 from . import _config as sp
 from . import _sass_func
 from ._tt_instruction import TT_Instruction
-from ._tt_terms import TT_Reg, TT_Func, AT_OP
+if not sp.SWITCH__USE_TT_EXT:
+    from ._tt_terms import TT_Reg, TT_Func, AT_OP
+else:
+    from py_sass_ext import TT_Reg, TT_Func, TT_OpCashQuestion, TT_OpCashAnd, TT_OpCashAssign, TT_OpAtNegate, TT_OpAtNot, TT_OpAtInvert, TT_OpAtSign, TT_OpAtAbs, TT_AtOp
 from ._sass_expression_utils import Op_Base
 from ._sass_expression_utils import Op_Iter
 from ._sass_expression_ops import *
@@ -19,6 +22,8 @@ from ._sass_expression_dec import SASS_Expr_Dec
 from .sm_cu_details import SM_Cu_Details
 from py_sass_ext import SASS_Bits
 from py_sass_ext import BitVector
+
+AT_OP = {'?':TT_OpCashQuestion, '&':TT_OpCashAnd, '=':TT_OpCashAssign, '-':TT_OpAtNegate, '!':TT_OpAtNot, '~':TT_OpAtInvert, '&&':TT_OpAtSign, '||':TT_OpAtAbs}
 
 class SASS_Expr:
     def __init__(self, expr:str, tables:dict, constants:dict, registers:dict, parameters:dict, tables_inv:dict):

@@ -4,8 +4,12 @@ import itertools as itt
 from . import _config as sp
 from ._sass_expression_ops import Op_Constant, Op_ConstBankAddress2, Op_ConstBankAddress0
 from ._tt_instruction import TT_Instruction
-from ._tt_terms import TT_Opcode, TT_Param, TT_List, TT_Reg, TT_Ext
-from ._tt_terms import TT_Func
+if not sp.SWITCH__USE_TT_EXT:
+    from ._tt_terms import TT_Opcode, TT_Param, TT_List, TT_Reg, TT_Ext
+    from ._tt_terms import TT_Func
+else:
+    from py_sass_ext import TT_Opcode, TT_Param, TT_List, TT_Reg, TT_Ext
+    from py_sass_ext import TT_Func
 from .sm_cu_details import SM_Cu_Details
 
 class SASS_Class_Props:

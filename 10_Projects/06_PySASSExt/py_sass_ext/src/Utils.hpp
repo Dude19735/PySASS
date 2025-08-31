@@ -28,7 +28,8 @@ namespace SASS {
     using TOptionsSet = std::set<int>;
     using TStrOptionsSet = std::set<std::string>;
     using TOptionsVec = std::vector<int>;
-    using TOptions = std::unordered_map<std::string, TOptionsSet>;
+    using TValue = std::variant<std::string, int>;
+    using TOptions = std::unordered_map<TValue, TOptionsSet>;
 
     using FArgs = std::variant<FArgInt, FArgSASSBits, FArgBool>;
     using TEncVals = std::unordered_map<std::string, SASS_Bits>;
@@ -38,9 +39,10 @@ namespace SASS {
         static TOptionsSet options_to_set(const TOptions& options, bool filter_invalid=false){
             std::set<int> mm = {};
             for(const auto o : options){
-                if(filter_invalid){
+                if(filter_invalid && std::holds_alternative<std::string>(o.first)){
                     std::string lower_name = "";
-                    std::transform(o.first.begin(), o.first.end(), lower_name.begin(), ::tolower);
+                    std::string temp = std::get<std::string>(o.first);
+                    std::transform(temp.begin(), temp.end(), lower_name.begin(), ::tolower);
                     if(lower_name.starts_with("invalid")) continue;
                 }
                 for(const auto v : o.second){

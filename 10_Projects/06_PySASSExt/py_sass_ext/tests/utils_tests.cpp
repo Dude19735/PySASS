@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
     }
     {
         auto reg = SASS::TT_Reg(0, x6, {{"R1", {1}}, {"R2", {2}}}, x);
-        auto ext = SASS::TT_Ext(x, reg, x6, false);
+        auto ext = SASS::TT_Ext(x, reg, false);
         auto param = SASS::TT_Param(x, {SASS::TT_OpAtAbs("Pg")}, reg, {ext}, false, false);
         auto f = SASS::TT_Cash({SASS::TT_OpCashAnd(), SASS::TT_OpCashAssign(), param , SASS::TT_OpCashQuestion()});
 
@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
         auto alias = SASS::TT_Alias(std::string("hello"));
         auto reg = SASS::TT_Reg(0, x6, {{"R1", {1}}, {"R2", {2}}}, x);
         auto func = SASS::TT_Func("SImm", {"SImm", "UImm", "F64Imm"}, func_arg, false, false, x);
-        auto ext = SASS::TT_Ext(x, reg, x6, false);
+        auto ext = SASS::TT_Ext(x, reg, false);
         auto param1 = SASS::TT_Param(x, {SASS::TT_OpAtAbs("Pg")}, reg, {ext}, false, false);
         auto param2 = SASS::TT_Param(x, {SASS::TT_OpAtNegate("Pg")}, func, {ext}, false, false);
         auto ops_vec = SASS::TOpsVec{ SASS::TT_OpAtNot("lol"), SASS::TT_OpAtAbs("lol"), SASS::TT_OpAtInvert("lol") };
@@ -179,8 +179,8 @@ int main(int argc, char** argv) {
         auto alias = SASS::TT_Alias(std::string("hello"));
         auto reg = SASS::TT_Reg(0, x6, {{"R1", {1}}, {"R2", {2}}}, x);
         auto func = SASS::TT_Func("SImm", {"SImm", "UImm", "F64Imm"}, func_arg, false, false, x);
-        auto ext1 = SASS::TT_Ext(x, reg, x6, false);
-        auto ext2 = SASS::TT_Ext(x, reg, x6, false);
+        auto ext1 = SASS::TT_Ext(x, reg, false);
+        auto ext2 = SASS::TT_Ext(x, reg, false);
         auto param1 = SASS::TT_Param(x, {SASS::TT_OpAtAbs("Pg")}, reg, {ext1}, false, false);
         auto param2 = SASS::TT_Param(x, {SASS::TT_OpAtNegate("Pg")}, func, {ext2}, false, false);
         auto param3 = SASS::TT_Param(x, {SASS::TT_OpAtNot("pp")}, reg, {ext1}, false, false);
@@ -201,8 +201,8 @@ int main(int argc, char** argv) {
         auto alias = SASS::TT_Alias(std::string("hello"));
         auto reg = SASS::TT_Reg(0, x6, {{"R1", {1}}, {"R2", {2}}}, x);
         auto func = SASS::TT_Func("SImm", {"SImm", "UImm", "F64Imm"}, func_arg, false, false, x);
-        auto ext1 = SASS::TT_Ext(x, reg, x6, false);
-        auto ext2 = SASS::TT_Ext(x, reg, x6, false);
+        auto ext1 = SASS::TT_Ext(x, reg, false);
+        auto ext2 = SASS::TT_Ext(x, reg, false);
         auto param1 = SASS::TT_Param(x, {SASS::TT_OpAtAbs("Pg")}, reg, {ext1}, false, false);
         auto param2 = SASS::TT_Param(x, {SASS::TT_OpAtNegate("Pg")}, func, {ext2}, false, false);
         auto param3 = SASS::TT_Param(x, {SASS::TT_OpAtNot("pp")}, reg, {ext1}, false, false);

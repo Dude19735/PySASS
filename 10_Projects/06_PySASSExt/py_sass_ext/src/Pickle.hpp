@@ -131,6 +131,23 @@ namespace SASS {
             return { static_cast<TSize>(res.size()), res };
         }
 
+        template<typename TVal>
+        static TVecPair to_bytes(const std::unordered_map<TValue, TVal>& val){
+            std::vector<uint8_t> res = size_to_vec(static_cast<TSize>(val.size()));
+            for(const std::pair<TValue, TVal> v : val) {
+                TVec key_vec = variant_to_vec(v.first);
+                TVec size1 = size_to_vec(key_vec.size());
+                res.insert(res.end(), size1.begin(), size1.end());
+                res.insert(res.end(), key_vec.begin(), key_vec.end());
+                
+                TVecPair val_vec = to_bytes(v.second);
+                TVec size2 = size_to_vec(val_vec.first);
+                res.insert(res.end(), size2.begin(), size2.end());
+                res.insert(res.end(), val_vec.second.begin(), val_vec.second.end());
+            }
+            return { static_cast<TSize>(res.size()), res };
+        }
+
         static TVecPair to_bytes(const TOptionsSet& val) {
             std::vector<uint8_t> res = size_to_vec(static_cast<TSize>(val.size()));
             std::vector<std::vector<uint8_t>> vec;
@@ -296,6 +313,32 @@ namespace SASS {
                     iter += sizeof(TSize);
                     TVal ival = to_data<TVal>(0, std::vector<TSize>{0, vals}, TSpan(iter, iter + vals));
                     res.insert({strval, ival});
+                    iter += vals;
+                    counter++;
+                }
+                if(counter != count) throw std::runtime_error(std::vformat("Invalid depacking of TOptions: [{}] entries recovered, but should be [{}]", std::make_format_args(counter, count)));
+                return res;
+            }
+        };
+        template<typename TVal>
+        struct unpack_unordered_map<std::unordered_map<TValue, TVal>> {
+            static std::unordered_map<TValue, TVal> to_data_unordered_map(const size_t index, const SSpan& sspan, const TSpan& tspan){
+                std::unordered_map<TValue, TVal> res;
+                TSize from = sspan[index];
+                TSize to = sspan[index+1];
+                const TSpan range(tspan.begin()+from, tspan.begin()+to);
+                const TSize count = *reinterpret_cast<const TSize*>(range.data());
+                TSpan::const_iterator iter = range.begin() + sizeof(TSize);
+                TSize counter = 0;
+                while(iter != range.end()) {
+                    const TSize tval_size = *reinterpret_cast<const TSize*>(&*iter);
+                    iter += sizeof(TSize);
+                    TValue tval = to_data<TValue>(0, std::vector<TSize>{0, tval_size}, TSpan(iter, iter+tval_size));
+                    iter += tval_size;
+                    const TSize vals = *reinterpret_cast<const TSize*>(&*iter);
+                    iter += sizeof(TSize);
+                    TVal ival = to_data<TVal>(0, std::vector<TSize>{0, vals}, TSpan(iter, iter + vals));
+                    res.insert({tval, ival});
                     iter += vals;
                     counter++;
                 }
@@ -564,24 +607,21 @@ namespace SASS {
                         if constexpr (IsVariant<TCurReal>) {
                             throw std::runtime_error("Invalid variant contents: the state is always an std::variant, but one entry in a state has to be transferable to a real type. The real type is not allowed to be an std::variant again!");
                         }
-                        else if constexpr (!IsVariant<TCurReal>){
+                        else {
                             return _tunpack_state_variant<TCurReal, TCurState, 0>(var.index(), var);
                         }
-                        else throw std::runtime_error("Invalid variant contents: should be an std::variant for the state and a real type for the other one!");
                     }
-                    else if constexpr (IsTuple<TCurState>) {
+                    else {
+                        if constexpr (!IsTuple<TCurState>) {
+                            throw std::runtime_error("Invalid variant contents: if the state is not an std::variant, it must be an std::tuple!");
+                        }
                         static_assert(!IsVariant<TCurReal>);
                         constexpr size_t state_size = std::tuple_size_v<TCurState>;
                         return tunpack_args<TCurReal, TCurState>::targs_to_obj(std::get<TCurState>(state), std::make_index_sequence<state_size>{});
                     }
-                    throw std::runtime_error("Invalid variant contents: should be either an std::variant or an std:.tuple");
-                    // return std::tuple<>();
-                    return TVOutReal();
                 }
                 else return _tunpack_variant<TVInState, TVOutReal, I + 1, variant_type_size>(variant_index, state);
             }
-            throw std::runtime_error("This point should never be reached: faulty recursion!");
-            return TVOutReal();
         }
 
         template <typename TVInReal, typename TVOutState, std::size_t I = 0, size_t variant_type_size>  requires (IsVariant<TVInReal> && IsVariant<TVOutState>)
@@ -594,28 +634,13 @@ namespace SASS {
                     using TCurReal = std::variant_alternative_t<I, TVInReal>;
                     TCurReal var = std::get<TCurReal>(real_obj);
 
-                    if constexpr (IsVariant<TCurState>){
-                        if constexpr (IsVariant<TCurReal>) {
-                            throw std::runtime_error("Invalid variant contents: the state is always an std::variant, but one entry in a state has to be transferable to a real type. The real type is not allowed to be an std::variant again!");
-                        }
-                        else if constexpr (!IsVariant<TCurReal>){
-                            return var.get_state(); // _tunpack_state_variant<TCurReal, TCurState, std::variant_size_v<TCurState>>(var.index(), var);
-                        }
-                        else {
-                            throw std::runtime_error("Invalid variant contents: should be an std::variant for the state and a real type for the other one!");
-                        }
+                    if constexpr (!(IsVariant<TCurState> && !IsVariant<TCurReal>)){
+                        throw std::runtime_error("Invalid variant contents: the state is always an std::variant, but one entry in a state has to be transferable to a real type. The real type is not allowed to be an std::variant again!");
                     }
-                    else if constexpr (IsTuple<TCurState>) {
-                        throw std::runtime_error("Invalid variant contents: should be an std::variant for the state and a real type for the other one!");
-                    }
-                    
-                    throw std::runtime_error("Invalid variant contents: should be either an std::variant or an std:.tuple");
-                    return TVOutState();
+                    return var.get_state(); // _tunpack_state_variant<TCurReal, TCurState, std::variant_size_v<TCurState>>(var.index(), var);
                 }
                 else return _tpack_variant<TVInReal, TVOutState, I + 1, variant_type_size>(variant_index, real_obj);
             }
-            throw std::runtime_error("This point should never be reached: faulty recursion!");
-            return TVOutState();
         }
 
     public:

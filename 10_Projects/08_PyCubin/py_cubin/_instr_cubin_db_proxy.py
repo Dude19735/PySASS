@@ -912,8 +912,8 @@ class Db_Kernel_Proxy:
                  Name:str, 
                  AdditionalInfo:str, 
                  instr_list:typing.List[Db_Instr_Proxy], 
-                 kernel_misc:typing.List[Db_KernelMisc_Proxy],
-                 kernel_graph:typing.List[Db_KernelGraph_Proxy]):
+                 kernel_misc:typing.List[Db_KernelMisc_Proxy]):
+                #  kernel_graph:typing.List[Db_KernelGraph_Proxy]):
         if not isinstance(SeqNr, int):raise Exception(sp.CONST__ERROR_ILLEGAL)
         if not isinstance(Name, str):raise Exception(sp.CONST__ERROR_ILLEGAL)
         if not isinstance(AdditionalInfo, str):raise Exception(sp.CONST__ERROR_ILLEGAL)
@@ -950,7 +950,7 @@ class Db_Kernel_Proxy:
                kernel_name:str, 
                instr_list:typing.List[Db_Instr_Proxy], 
                kernel_misc:typing.List[Db_KernelMisc_Proxy], 
-               kernel_graph:typing.List[Db_KernelGraph_Proxy], 
+            #    kernel_graph:typing.List[Db_KernelGraph_Proxy], 
                additional_info:str):
         # ook
         if not isinstance(seq_nr, int): raise Exception(sp.CONST__ERROR_ILLEGAL)
@@ -963,7 +963,7 @@ class Db_Kernel_Proxy:
         # if not all(isinstance(c, Db_KernelGraph_Proxy) for c in kernel_graph): raise Exception(sp.CONST__ERROR_ILLEGAL)
         if not isinstance(additional_info, str):raise Exception(sp.CONST__ERROR_ILLEGAL)
 
-        return Db_Kernel_Proxy(seq_nr, kernel_name, additional_info, instr_list, kernel_misc, kernel_graph)
+        return Db_Kernel_Proxy(seq_nr, kernel_name, additional_info, instr_list, kernel_misc) #, kernel_graph)
 
 class Db_BinaryMisc_Proxy:
     Type_Version = 'Version'

@@ -13,7 +13,7 @@ from ._instr_cubin_db_proxy import Db_Kernel_Proxy, Db_KernelMisc_Proxy, Db_Kern
 from .sm_cubin_kernel_ht import SM_CuBin_Kernel_Head, SM_CuBin_Kernel_Tail
 from .sm_cubin_lib import SM_CuBin_Lib
 from .sm_cubin_elf import SM_Cubin_Elf
-from .sm_cubin_graph import Kernel_Graph
+# from .sm_cubin_graph import Kernel_Graph
 
 """
 This file contains abstraction class for one single Cuda kernel. NOTE that a Cuda binary
@@ -291,9 +291,9 @@ class SM_CuBin_Kernel:
     def compute_bodies(self, sass:SM_SASS, verbose=False):    
         return SM_CuBin_Kernel.compute_kernel_bodies(sass, self.__kernel_name, self.__universes, verbose=verbose)
 
-    def add_graph(self, kernel_graph:Kernel_Graph):
-        if not isinstance(kernel_graph, Kernel_Graph): raise Exception(sp.CONST__ERROR_ILLEGAL)
-        self.__kernel_graph = kernel_graph
+    # def add_graph(self, kernel_graph:Kernel_Graph):
+    #     if not isinstance(kernel_graph, Kernel_Graph): raise Exception(sp.CONST__ERROR_ILLEGAL)
+    #     self.__kernel_graph = kernel_graph
 
     def to_db(self, sass:SM_SASS):
         instr_list = []
@@ -303,10 +303,10 @@ class SM_CuBin_Kernel:
             instr_list.append(u.to_db(sass))
             instr_map[u.instr_index] = instr_list[-1]
         
-        kernel_proxy:Db_KernelGraph_Proxy = None
-        if self.__kernel_graph is not None:
-            print(tc.colored("Missing graph-to-db!!!"))
-            # kernel_proxy = self.__kernel_graph.to_db(instr_map)
+        # kernel_proxy:Db_KernelGraph_Proxy = None
+        # if self.__kernel_graph is not None:
+        #     print(tc.colored("Missing graph-to-db!!!"))
+        #     # kernel_proxy = self.__kernel_graph.to_db(instr_map)
 
         # Invert things for nicer mapping
         # reg_map = {rr : dict(itt.chain.from_iterable([[(vv,k) for vv in v] for k,v in sass.sm.details.REGISTERS_DICT[rr].items()])) for rr in self.used_regs.keys()}
@@ -322,7 +322,7 @@ class SM_CuBin_Kernel:
             Db_KernelMisc_Proxy.create(Db_KernelMisc_Proxy.Type_KernelDecoded, 6, '1' if self.__decoded else '0', 'This one is true if the kernel was decoded. It can be not decoded if the binary has a lot of kernels and the user chooses "single decode" mode. "single decode" mode is the default.'),
         ]
 
-        return Db_Kernel_Proxy.create(0, self.kernel_name, instr_list, misc, [kernel_proxy], '')
+        return Db_Kernel_Proxy.create(0, self.kernel_name, instr_list, misc, '') #, [kernel_proxy], '')
 
     @staticmethod
     def __contract_used_regs(used_regs_loc:typing.List[dict], used_regs:dict) -> dict:

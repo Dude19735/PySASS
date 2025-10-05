@@ -535,7 +535,7 @@ def py_test_to_file():
     # ff2.to_exec(kk2_new)
     pass
 
-if __name__ == '__main__' or True:
+if __name__ == '__main__':
     # py_test_encdec()
     # py_test_smd_parse()
     # py_test_to_exec()

@@ -171,6 +171,6 @@ class BenchmarkFFMA(BenchmarkBase):
             raise Exception(sp.CONST__ERROR_ILLEGAL)
 
 if __name__ == '__main__':
-    b = BenchmarkFFMA(86, experiment_nr=0)
+    b = BenchmarkFFMA(86, experiment_nr=1)
     print("Finished")
     pass

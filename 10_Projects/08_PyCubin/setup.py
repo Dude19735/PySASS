@@ -15,7 +15,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "Operating System :: Linux",
     ],
-    install_requires=["termcolor", "py_sass_ext>=0.0.1", "py_sass>=0.0.24"],
+    install_requires=["termcolor", "py_sass_ext>=0.0.1", "py_sass>=0.0.24", "pyelftools"],
     packages=setuptools.find_packages(),
     include_package_data=True,
     python_requires=">=3.12",

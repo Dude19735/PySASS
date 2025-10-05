@@ -15,7 +15,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: Linux",
     ],
-    install_requires=["termcolor", "py_sass_ext>=0.0.1", "psutil"],
+    install_requires=["termcolor", "py_sass_ext>=0.0.1", "psutil", "requests", "tabulate"],
     packages=setuptools.find_packages(),
     include_package_data=True,
     python_requires=">=3.12",

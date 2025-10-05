@@ -564,13 +564,13 @@ NB_MODULE(_sass_values, m) {
 
     nb::class_<SASS::TT_AtOp>(m, "TT_AtOp")
     .def(nb::init<std::string, std::string, std::string, uint8_t>(), nb::arg("op_name"), nb::arg("op_sign"), nb::arg("reg_alias"), nb::arg("op_type"))
-    .def("op_name", &SASS::TT_AtOp::op_name)
-    .def("get_domain", &SASS::TT_AtOp::get_domain, nb::arg("to_limit"), nb::arg("filter_invalid")=false)
     .def_prop_ro("alias", &SASS::TT_AtOp::alias)
-    .def("op_type", &SASS::TT_AtOp::op_type)
+    .def_prop_ro("op_type", &SASS::TT_AtOp::op_type)
+    .def_prop_ro("value", &SASS::TT_AtOp::value)
+    .def_prop_ro("op_name", &SASS::TT_AtOp::op_name)
+    .def("get_domain", &SASS::TT_AtOp::get_domain, nb::arg("to_limit"), nb::arg("filter_invalid")=false)
     .def("get_enc_alias", &SASS::TT_AtOp::get_enc_alias)
     .def("__str__", &SASS::TT_AtOp::__str__)
-    .def_prop_ro("value", &SASS::TT_AtOp::value)
     .def("__getstate__", &SASS::TT_AtOp::__getstate__)
     .def("__setstate__", &SASS::TT_AtOp::__setstate__);
 
@@ -587,8 +587,8 @@ NB_MODULE(_sass_values, m) {
 
     nb::class_<SASS::TT_CashComponent>(m, "TT_CashComponent")
     .def(nb::init<std::string>(), nb::arg("cash_value"))
-    .def("__str__", &SASS::TT_CashComponent::__str__)
     .def_prop_ro("value", &SASS::TT_CashComponent::value)
+    .def("__str__", &SASS::TT_CashComponent::__str__)
     .def("__getstate__", &SASS::TT_CashComponent::__getstate__ )
     .def("__setstate__", &SASS::TT_CashComponent::__setstate__ );
     nb::class_<SASS::TT_OpCashQuestion, SASS::TT_CashComponent>(m, "TT_OpCashQuestion").def(nb::init<>());
@@ -597,11 +597,11 @@ NB_MODULE(_sass_values, m) {
 
     nb::class_<SASS::TT_Default>(m, "TT_Default")
     .def(nb::init<SASS::TValue, bool, SASS::TOptions>(), nb::arg("def_name"), nb::arg("has_print"), nb::arg("options"))
-    .def("__str__", &SASS::TT_Default::__str__)
-    .def("exists", &SASS::TT_Default::exists)
-    .def("options", &SASS::TT_Default::options)
-    .def("has_print", &SASS::TT_Default::has_print)
+    .def_prop_ro("exists", &SASS::TT_Default::exists)
+    .def_prop_ro("options", &SASS::TT_Default::options)
+    .def_prop_ro("has_print", &SASS::TT_Default::has_print)
     .def_prop_ro("value", &SASS::TT_Default::value)
+    .def("__str__", &SASS::TT_Default::__str__)
     .def("__getstate__", &SASS::TT_Default::__getstate__ )
     .def("__setstate__", &SASS::TT_Default::__setstate__ );
 
@@ -609,46 +609,66 @@ NB_MODULE(_sass_values, m) {
 
     nb::class_<SASS::TT_FuncArg>(m, "TT_FuncArg")
     .def(nb::init<SASS::TValue, bool, bool, int, bool, int, bool, int>(), nb::arg("arg_val"), nb::arg("has_star"), nb::arg("has_print"), nb::arg("bit_len"), nb::arg("has_default"), nb::arg("default_val"), nb::arg("has_max_val"), nb::arg("max_val"))
-    .def("__str__", &SASS::TT_FuncArg::__str__)
-    .def("set_max_val", &SASS::TT_FuncArg::set_max_val, nb::arg("max_val"))
     .def_prop_ro("value", &SASS::TT_FuncArg::value)
+    .def_prop_ro("bit_len", [&](const SASS::TT_FuncArg& self) { return SASS::TT_FuncArg::bit_len(self); })
+    .def_prop_ro("has_default", [&](const SASS::TT_FuncArg& self) { return SASS::TT_FuncArg::has_default(self); })
+    .def_prop_ro("default_val", [&](const SASS::TT_FuncArg& self) { return SASS::TT_FuncArg::default_val(self); })
+    .def_prop_ro("has_max_val", [&](const SASS::TT_FuncArg& self) { return SASS::TT_FuncArg::has_max_val(self); })
+    .def_prop_ro("max_val", [&](const SASS::TT_FuncArg& self) { return SASS::TT_FuncArg::max_val(self); })
+    .def("set_max_val", &SASS::TT_FuncArg::set_max_val, nb::arg("max_val"))
+    .def("__str__", &SASS::TT_FuncArg::__str__)
     .def("__getstate__", &SASS::TT_FuncArg::__getstate__ )
     .def("__setstate__", &SASS::TT_FuncArg::__setstate__ );
 
     nb::class_<SASS::TT_Func>(m, "TT_Func")
     .def(nb::init<std::string, SASS::TStrOptionsSet, SASS::TT_FuncArg, bool, bool, SASS::TT_Alias>(), nb::arg("func_name"), nb::arg("options"), nb::arg("arg_default"), nb::arg("star"), nb::arg("is_address"), nb::arg("alias"))
-    .def("__str__", &SASS::TT_Func::__str__)
-    .def("get_domain", &SASS::TT_Func::get_domain, nb::arg("to_limit"), nb::arg("filter_invalid"))
-    .def("sass_from_bits", &SASS::TT_Func::sass_from_bits, nb::arg("bits"))
     .def_prop_ro("alias", &SASS::TT_Func::alias)
     .def_prop_ro("value", &SASS::TT_Func::value)
+    .def_prop_ro("options", &SASS::TT_Func::options)
+    .def_prop_ro("arg_default", &SASS::TT_Func::arg_default)
+    .def_prop_ro("star", &SASS::TT_Func::star)
+    .def_prop_ro("is_address", &SASS::TT_Func::is_address)
+    .def_prop_ro("func", &SASS::TT_Func::func)
+    .def("get_domain", &SASS::TT_Func::get_domain, nb::arg("to_limit"), nb::arg("filter_invalid"))
+    .def("sass_from_bits", &SASS::TT_Func::sass_from_bits, nb::arg("bits"))
+    .def("__str__", &SASS::TT_Func::__str__)
     .def("__getstate__", &SASS::TT_Func::__getstate__ )
     .def("__setstate__", &SASS::TT_Func::__setstate__ );
 
     nb::class_<SASS::TT_Reg>(m, "TT_Reg")
     .def(nb::init<std::string, SASS::TT_Default, SASS::TOptions, SASS::TT_Alias>(), nb::arg("value"), nb::arg("default_val"), nb::arg("options"), nb::arg("alias"))
-    .def("__str__", &SASS::TT_Reg::__str__)
-    .def("get_domain", &SASS::TT_Reg::get_domain, nb::arg("to_limit"), nb::arg("filter_invalid"))
-    .def("sass_from_bits", &SASS::TT_Reg::sass_from_bits, nb::arg("bits"))
     .def_prop_ro("alias", &SASS::TT_Reg::alias)
     .def_prop_ro("value", &SASS::TT_Reg::value)
+    .def_prop_ro("default", &SASS::TT_Reg::default_)
+    .def_prop_ro("options", &SASS::TT_Reg::options)
+    .def_prop_ro("min_bit_len", &SASS::TT_Reg::min_bit_len)
+    .def("get_domain", &SASS::TT_Reg::get_domain, nb::arg("to_limit"), nb::arg("filter_invalid"))
+    .def("sass_from_bits", &SASS::TT_Reg::sass_from_bits, nb::arg("bits"))
+    .def("__str__", &SASS::TT_Reg::__str__)
     .def("__getstate__", &SASS::TT_Reg::__getstate__ )
     .def("__setstate__", &SASS::TT_Reg::__setstate__ );
 
     nb::class_<SASS::TT_ICode>(m, "TT_ICode")
     .def(nb::init<std::string, IntVector, IntVector>(), nb::arg("bin_str"), nb::arg("bin_ind"), nb::arg("bin_tup"))
-    .def("__str__", &SASS::TT_ICode::__str__)
     .def_prop_ro("value", &SASS::TT_ICode::value)
+    .def_prop_ro("bin_str", &SASS::TT_ICode::bin_str)
+    .def_prop_ro("bin_ind", &SASS::TT_ICode::bin_ind)
+    .def_prop_ro("bin_tup", &SASS::TT_ICode::bin_tup)
     .def("get_opcode_bin", &SASS::TT_ICode::get_opcode_bin)
+    .def("__str__", &SASS::TT_ICode::__str__)
     .def("__getstate__", &SASS::TT_ICode::__getstate__ )
     .def("__setstate__", &SASS::TT_ICode::__setstate__ );
 
     nb::class_<SASS::TT_Pred>(m, "TT_Pred")
     .def(nb::init<SASS::TT_Alias, SASS::TT_Reg, SASS::TT_OpAtNot>(), nb::arg("alias"), nb::arg("reg"), nb::arg("op"))
-    .def("__str__", &SASS::TT_Pred::__str__)
     .def_prop_ro("value", &SASS::TT_Pred::value)
     .def_prop_ro("alias", &SASS::TT_Pred::alias)
+    .def_prop_ro("reg", &SASS::TT_Pred::reg)
+    .def_prop_ro("op", &SASS::TT_Pred::op)
+    .def_prop_ro("is_none", &SASS::TT_Pred::is_none)
+    .def_prop_ro("eval", &SASS::TT_Pred::eval)
     .def("get_enc_alias", &SASS::TT_Pred::get_enc_alias)
+    .def("__str__", &SASS::TT_Pred::__str__)
     .def("__getstate__", &SASS::TT_Pred::__getstate__ )
     .def("__setstate__", &SASS::TT_Pred::__setstate__ );
 
@@ -656,19 +676,25 @@ NB_MODULE(_sass_values, m) {
 
     nb::class_<SASS::TT_Ext>(m, "TT_Ext")
     .def(nb::init<SASS::TT_Alias, SASS::TT_Reg, bool>(), nb::arg("alias"), nb::arg("reg"), nb::arg("is_at_alias"))
-    .def("__str__", &SASS::TT_Ext::__str__)
     .def_prop_ro("value", &SASS::TT_Ext::value)
     .def_prop_ro("alias", &SASS::TT_Ext::alias)
+    .def_prop_ro("reg", &SASS::TT_Ext::reg)
+    .def_prop_ro("is_at_alias", &SASS::TT_Ext::is_at_alias)
+    .def_prop_ro("eval", &SASS::TT_Ext::eval)
     .def("get_enc_alias", &SASS::TT_Ext::get_enc_alias)
+    .def("__str__", &SASS::TT_Ext::__str__)
     .def("__getstate__", &SASS::TT_Ext::__getstate__ )
     .def("__setstate__", &SASS::TT_Ext::__setstate__ );
 
     nb::class_<SASS::TT_Opcode>(m, "TT_Opcode")
     .def(nb::init<SASS::TT_Alias, SASS::TT_ICode, SASS::TExtVec>(), nb::arg("alias"), nb::arg("icode"), nb::arg("extensions"))
-    .def("__str__", &SASS::TT_Opcode::__str__)
     .def_prop_ro("value", &SASS::TT_Opcode::value)
     .def_prop_ro("alias", &SASS::TT_Opcode::alias)
+    .def_prop_ro("icode", &SASS::TT_Opcode::icode)
+    .def_prop_ro("eval", &SASS::TT_Opcode::eval)
+    .def_prop_ro("extensions", &SASS::TT_Opcode::extensions)
     .def("get_enc_alias", &SASS::TT_Opcode::get_enc_alias)
+    .def("__str__", &SASS::TT_Opcode::__str__)
     .def("__getstate__", &SASS::TT_Opcode::__getstate__ )
     .def("__setstate__", &SASS::TT_Opcode::__setstate__ );
 
@@ -677,43 +703,56 @@ NB_MODULE(_sass_values, m) {
     nb::class_<SASS::TT_Param>(m, "TT_Param")
     .def(nb::init<SASS::TT_Alias, SASS::TOpsVec, SASS::TT_Reg, SASS::TExtVec, bool, bool>(), nb::arg("alias"), nb::arg("ops"), nb::arg("value"), nb::arg("extensions"), nb::arg("is_at_alias"), nb::arg("has_attr_star"))
     .def(nb::init<SASS::TT_Alias, SASS::TOpsVec, SASS::TT_Func, SASS::TExtVec, bool, bool>(), nb::arg("alias"), nb::arg("ops"), nb::arg("value"), nb::arg("extensions"), nb::arg("is_at_alias"), nb::arg("has_attr_star"))
-    .def("__str__", &SASS::TT_Param::__str__)
     .def_prop_ro("value", &SASS::TT_Param::value)
     .def_prop_ro("alias", &SASS::TT_Param::alias)
     .def_prop_ro("ops", &SASS::TT_Param::ops)
     .def_prop_ro("extensions", &SASS::TT_Param::extensions)
+    .def_prop_ro("is_at_alias", &SASS::TT_Param::is_at_alias)
+    .def_prop_ro("has_attr_star", &SASS::TT_Param::has_attr_star)
+    .def_prop_ro("eval", &SASS::TT_Param::eval)
+    .def_prop_ro("attr", [&](SASS::TT_Param& self) { return SASS::TListVec{}; })
     .def("get_enc_alias", &SASS::TT_Param::get_enc_alias)
+    .def("__str__", &SASS::TT_Param::__str__)
     .def("__getstate__", &SASS::TT_Param::__getstate__ )
     .def("__setstate__", &SASS::TT_Param::__setstate__ );
 
     nb::class_<SASS::TT_List>(m, "TT_List")
     .def(nb::init<SASS::TParamVec, SASS::TExtVec>(), nb::arg("params"), nb::arg("extensions"))
-    .def("__str__", &SASS::TT_List::__str__)
     .def_prop_ro("value", &SASS::TT_List::value)
+    .def_prop_ro("eval", &SASS::TT_List::eval)
+    .def_prop_ro("params", &SASS::TT_List::params)
+    .def_prop_ro("extensions", &SASS::TT_List::extensions)
     .def("get_enc_alias", &SASS::TT_List::get_enc_alias)
+    .def("__str__", &SASS::TT_List::__str__)
     .def("__getstate__", &SASS::TT_List::__getstate__ )
     .def("__setstate__", &SASS::TT_List::__setstate__ );
 
     nb::class_<SASS::TT_AttrParam, SASS::TT_Param>(m, "TT_AttrParam")
     .def(nb::init<SASS::TT_Alias, SASS::TOpsVec, SASS::TT_Reg, SASS::TListVec, SASS::TExtVec, bool, bool>(), nb::arg("alias"), nb::arg("ops"), nb::arg("value"), nb::arg("attr"), nb::arg("extensions"), nb::arg("is_at_alias"), nb::arg("has_attr_star"))
-    .def(nb::init<SASS::TT_Alias, SASS::TOpsVec, SASS::TT_Func, SASS::TListVec, SASS::TExtVec, bool, bool>(), nb::arg("alias"), nb::arg("ops"), nb::arg("value"), nb::arg("attr"), nb::arg("extensions"), nb::arg("is_at_alias"), nb::arg("has_attr_star"));
+    .def(nb::init<SASS::TT_Alias, SASS::TOpsVec, SASS::TT_Func, SASS::TListVec, SASS::TExtVec, bool, bool>(), nb::arg("alias"), nb::arg("ops"), nb::arg("value"), nb::arg("attr"), nb::arg("extensions"), nb::arg("is_at_alias"), nb::arg("has_attr_star"))
+    .def_prop_ro("attr", &SASS::TT_AttrParam::attr)
+    .def_prop_ro("eval", &SASS::TT_AttrParam::eval);
 
     nb::class_<SASS::TT_Cash>(m, "TT_Cash")
     .def(nb::init<SASS::TCashComponentsVec, bool>(), nb::arg("cash_vals"), nb::arg("added_later")=false)
     .def("__str__", &SASS::TT_Cash::__str__)
     .def_prop_ro("values", &SASS::TT_Cash::values)
+    .def_prop_ro("cash_components", &SASS::TT_Cash::cash_components)
+    .def_prop_ro("added_later", &SASS::TT_Cash::added_later)
+    .def_prop_ro("eval", &SASS::TT_Cash::eval)
     .def("get_enc_alias", &SASS::TT_Cash::get_enc_alias)
     .def("__getstate__", &SASS::TT_Cash::__getstate__ )
     .def("__setstate__", &SASS::TT_Cash::__setstate__ );
 
     nb::class_<SASS::TT_Instruction>(m, "TT_Instruction")
     .def(nb::init<std::string, SASS::TT_Pred, SASS::TT_Opcode, SASS::TOperandVec, SASS::TCashVec>(), nb::arg("class_name"), nb::arg("pred"), nb::arg("opcode"), nb::arg("regs"), nb::arg("cashs"))
-    .def("__str__", &SASS::TT_Instruction::__str__)
+    .def_prop_ro("class_name", &SASS::TT_Instruction::class_name)
     .def_prop_ro("pred", &SASS::TT_Instruction::pred)
     .def_prop_ro("opcode", &SASS::TT_Instruction::opcode)
     .def_prop_ro("regs", &SASS::TT_Instruction::regs)
     .def_prop_ro("cashs", &SASS::TT_Instruction::cashs)
     .def_prop_ro("eval", &SASS::TT_Instruction::eval)
+    .def("__str__", &SASS::TT_Instruction::__str__)
     .def("__getstate__", &SASS::TT_Cash::__getstate__ )
     .def("__setstate__", &SASS::TT_Cash::__setstate__ );
 }

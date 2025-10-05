@@ -163,6 +163,7 @@ class TT_Instruction:
                 #  - registers with attributs: C:srcConst[UImm(5/0*):constBank]*[ZeroRegister(RZ):Ra+SImm(17)*:immConstOffset]
                 #  => in both instances RegisterFAU:Rd and C:srcConst are a [RegisterName]:[AliasName] pair
                 # reg_vals[str(i.alias)] = set(int(x) for x in i.value.get_domain({}))
+                # if (sp.SWITCH__USE_TT_EXT and isinstance(i, cTT_AttrParam)) or (not sp.SWITCH__USE_TT_EXT):
                 for attr in i.attr:
                     # attributs are always lists of things and the lists always contain TT_Param
                     if not isinstance(attr, TT_List): raise Exception(sp.CONST__ERROR_UNEXPECTED)

@@ -10,7 +10,7 @@ from . import _config as sp
 from . import _sass_func
 from ._tt_instruction import TT_Instruction
 if not sp.SWITCH__USE_TT_EXT:
-    from ._tt_terms import TT_Reg, TT_Func, AT_OP
+    from ._tt_terms import TT_Reg, TT_Func
 else:
     from py_sass_ext import TT_Reg, TT_Func, TT_OpCashQuestion, TT_OpCashAnd, TT_OpCashAssign, TT_OpAtNegate, TT_OpAtNot, TT_OpAtInvert, TT_OpAtSign, TT_OpAtAbs, TT_AtOp
 from ._sass_expression_utils import Op_Base
@@ -23,7 +23,10 @@ from .sm_cu_details import SM_Cu_Details
 from py_sass_ext import SASS_Bits
 from py_sass_ext import BitVector
 
-AT_OP = {'?':TT_OpCashQuestion, '&':TT_OpCashAnd, '=':TT_OpCashAssign, '-':TT_OpAtNegate, '!':TT_OpAtNot, '~':TT_OpAtInvert, '&&':TT_OpAtSign, '||':TT_OpAtAbs}
+if sp.SWITCH__USE_TT_EXT:
+    AT_OP = {'?':TT_OpCashQuestion, '&':TT_OpCashAnd, '=':TT_OpCashAssign, '-':TT_OpAtNegate, '!':TT_OpAtNot, '~':TT_OpAtInvert, '&&':TT_OpAtSign, '||':TT_OpAtAbs}
+else:
+    from ._tt_terms import AT_OP
 
 class SASS_Expr:
     def __init__(self, expr:str, tables:dict, constants:dict, registers:dict, parameters:dict, tables_inv:dict):
@@ -290,7 +293,7 @@ class SASS_Expr:
         if self.startswith_defined(): self.__pattern = tuple([type(self.__split[0]).__name__])
         elif self.startswith_not_defined(): self.__pattern = tuple([type(self.__split[0]).__name__, type(self.__split[1]).__name__])
         else: self.__pattern = tuple(type(i).__name__ for i in self.__split)
-
+        
         self.__old_pattern = self.__pattern
         alias_enum = {i:"_"+str(ind) for ind,i in enumerate(self.get_sequenced_alias_names())}
         if (not (self.__pattern == (Op_Defined.__name__,) or self.__pattern == (Op_Not.__name__, Op_Defined.__name__))):

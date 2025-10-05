@@ -9,7 +9,7 @@ if not sp.SWITCH__USE_TT_EXT:
     from ._tt_terms import TT_Func
 else:
     from py_sass_ext import TT_Opcode, TT_Param, TT_List, TT_Reg, TT_Ext
-    from py_sass_ext import TT_Func
+    from py_sass_ext import TT_Func, TT_AttrParam
 from .sm_cu_details import SM_Cu_Details
 
 class SASS_Class_Props:
@@ -101,7 +101,7 @@ class SASS_Class_Props:
         self.__alias_exts = set()
         self.__alias_all = set()
         self.__alias_ops = set()
-        self.__alias_added_defaults = set()
+        # self.__alias_added_defaults = set()
         self.__tt_exts = dict()
         self.__tt_pred = dict()
         self.__tt_funcs = dict()
@@ -487,7 +487,8 @@ class SASS_Class_Props:
 
         :return: an empty set unless "SASS_Class_Cash_Aug" is used
         :rtype: set
-        """        
+        """       
+        raise Exception(sp.CONST__ERROR_DEPRECATED) 
         return self.__alias_added_defaults
     @property
     def alias_all(self) -> set: 
@@ -1219,10 +1220,10 @@ class SASS_Class_Props:
         if self.__format_tt.pred is not None: 
             self.__has_pred = True
             self.__alias_pred.add(self.__format_tt.pred.alias.value)
-            self.__alias_ops = self.__alias_ops.union(set(e.alias for e in self.__format_tt.pred.ops))
+            self.__alias_ops = self.__alias_ops.union(set([str(self.__format_tt.pred.op.alias)]))
             self.__tt_pred[self.__format_tt.pred.alias.value] = self.__format_tt.pred.value
 
-        self.__alias_added_defaults = set(self.__format_tt.default_enc_vals.keys())
+        # self.__alias_added_defaults = set(self.__format_tt.default_enc_vals.keys())
         
         # The alias like 'uImm@sign' is a built in sign function for all TT_Func that is used up to SM 62.
         # Also, the entire framework just returns 1 not matter what for that built in function.
@@ -1250,12 +1251,12 @@ class SASS_Class_Props:
                     if isinstance(j.value, TT_Reg):
                         add_ext(j.extensions, j)
                         add_reg(j, self.__list_rf_alias)
-                        self.__alias_ops = self.__alias_ops.union(set(e.alias for e in j.ops))
+                        self.__alias_ops = self.__alias_ops.union(set(str(e.alias) for e in j.ops))
                     elif isinstance(j.value, TT_Func):
                         self.__has_imm = True
                         add_ext(j.extensions, j)
                         add_func(j, self.__list_rf_alias)
-                        self.__alias_ops = self.__alias_ops.union(set(e.alias for e in j.ops if not e.alias.endswith('@sign')))
+                        self.__alias_ops = self.__alias_ops.union(set(str(e.alias) for e in j.ops if not e.alias.endswith('@sign')))
                 add_ext(i.extensions, i)
 
             elif isinstance(i.value, TT_Reg):
@@ -1264,6 +1265,7 @@ class SASS_Class_Props:
                 #  - registers with attributs: C:srcConst[UImm(5/0*):constBank]*[ZeroRegister(RZ):Ra+SImm(17)*:immConstOffset]
                 #  => in both instances RegisterFAU:Rd and C:srcConst are a [RegisterName]:[AliasName] pair
                 # reg_vals[str(i.alias)] = set(int(x) for x in i.value.get_domain({}))
+                # if (sp.SWITCH__USE_TT_EXT and isinstance(i, TT_AttrParam)) or (not sp.SWITCH__USE_TT_EXT):
                 for attr_ind, attr in enumerate(i.attr):
                     # if we have an attribute, we have a memory access somewhere
                     self.__has_attr_arg = True
@@ -1277,21 +1279,23 @@ class SASS_Class_Props:
                         if isinstance(a.value, TT_Reg):
                             add_ext(a.extensions, a)
                             add_reg(a, self.__list_rf_alias)
-                            self.__alias_ops = self.__alias_ops.union(set(e.alias for e in a.ops))
+                            self.__alias_ops = self.__alias_ops.union(set(str(e.alias) for e in a.ops))
                         elif isinstance(a.value, TT_Func): 
                             self.__has_imm = True
                             add_ext(a.extensions, a)
                             add_func(a, self.__list_rf_alias)
-                            self.__alias_ops = self.__alias_ops.union(set(e.alias for e in a.ops if not e.alias.endswith('@sign')))
+                            self.__alias_ops = self.__alias_ops.union(set(str(e.alias) for e in a.ops if not str(e.alias).endswith('@sign')))
 
                 add_ext(i.extensions, i)
-                if not i.attr: add_reg(i, None)
-                self.__alias_ops = self.__alias_ops.union(set(e.alias for e in i.ops))
+                # if (sp.SWITCH__USE_TT_EXT and isinstance(i, TT_Param)): add_reg(i, None)
+                # elif (not sp.SWITCH__USE_TT_EXT) and 
+                if (not i.attr): add_reg(i, None)
+                self.__alias_ops = self.__alias_ops.union(set(str(e.alias) for e in i.ops))
             elif isinstance(i.value, TT_Func): 
                 self.__has_imm = True
                 add_ext(i.extensions, i)
                 add_func(i, None)
-                self.__alias_ops = self.__alias_ops.union(set(e.alias for e in i.ops if not e.alias.endswith('@sign')))
+                self.__alias_ops = self.__alias_ops.union(set(str(e.alias) for e in i.ops if not str(e.alias).endswith('@sign')))
             else: raise Exception(sp.CONST__ERROR_UNEXPECTED)
     
     def resolve_size_mappings(self):

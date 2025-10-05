@@ -117,7 +117,7 @@ class TT_OpAtNot(TT_Base):
     @property
     def alias(self):
         if self.__reg_alias is None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
-        return self.__reg_alias + self.__op_name
+        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name)
     def set_alias(self, reg_alias:str): self.__reg_alias = reg_alias
     def min_bit_len(self): return self.__min_bit_len
     def __str__(self): return TT_Op.as_str(self.__op_sign)
@@ -153,7 +153,7 @@ class TT_OpAtNegate(TT_Base):
     @property
     def alias(self):
         if self.__reg_alias is None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
-        return self.__reg_alias + self.__op_name
+        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name)
     def set_alias(self, reg_alias:str): self.__reg_alias = reg_alias
     def min_bit_len(self): return self.__min_bit_len
     # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr) -> SASS_Bits:
@@ -191,7 +191,7 @@ class TT_OpAtAbs(TT_Base):
     @property
     def alias(self):
         if self.__reg_alias is None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
-        return self.__reg_alias + self.__op_name
+        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name)
     def set_alias(self, reg_alias:str): self.__reg_alias = reg_alias
     def min_bit_len(self): return self.__min_bit_len
     # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr) -> SASS_Bits:
@@ -233,7 +233,7 @@ class TT_OpAtSign(TT_Base):
     @property
     def alias(self):
         if self.__reg_alias is None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
-        return self.__reg_alias + self.__op_name
+        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name)
     def set_alias(self, reg_alias:str): self.__reg_alias = reg_alias
     def min_bit_len(self): return self.__min_bit_len
     # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr) -> SASS_Bits:
@@ -274,7 +274,7 @@ class TT_OpAtInvert(TT_Base):
     @property
     def alias(self):
         if self.__reg_alias is None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
-        return self.__reg_alias + self.__op_name
+        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name)
     def set_alias(self, reg_alias:str): self.__reg_alias = reg_alias
     def min_bit_len(self): return self.__min_bit_len
     # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr) -> SASS_Bits:
@@ -591,7 +591,7 @@ class TT_Pred:
 
         op_start = term.find('[')
         op_end = term.find(']')
-        self.ops = [AT_OP[term[(op_start+1):op_end]](self.class_name)]
+        self.op = AT_OP[term[(op_start+1):op_end]](self.class_name)
         
         reg_end = term.find('(')
         # arg_options = {}
@@ -621,9 +621,9 @@ class TT_Pred:
             raise Exception("TT_Pred {0} for class {1}: format error".format(str(tt_term), self.class_name))
         self.alias = TT_Alias(class_name, alias)
         self.value.set_alias(self.alias) # the register has to know it's own alias
-        for ops in self.ops: ops.set_alias(str(self.alias)) # the atop has to know the alias as well
+        self.op.set_alias(str(self.alias)) # the atop has to know the alias as well
         self.eval[self.alias.value] = self.value
-        self.eval[self.alias.value + self.ops[0].op_name()] = self.ops[0]
+        self.eval[self.alias.value + self.op.op_name()] = self.op
         self.eval_alias[self.alias.value] = self
         self.operand_index = [self.alias.value]
 
@@ -633,12 +633,12 @@ class TT_Pred:
         if not old == new:
             raise Exception("Class {0}: TT_Pred {1} benchmark compare error".format(self.class_name, old))
 
-        self.enc_alias = [self.alias.value] + [o.alias for o in self.ops]
+        self.enc_alias = [self.alias.value] + [str(self.op.alias)]
 
     def get_enc_alias(self):
         return self.enc_alias
     def __str__(self):
-        res = '@[' + str(self.ops[0]).strip() + "]"
+        res = '@[' + str(self.op).strip() + "]"
         res += str(self.value)
         res += ":" + str(self.alias)
         return res
@@ -646,7 +646,7 @@ class TT_Pred:
     def get_decode_value(self) -> SASS_Bits: raise Exception(sp.CONST__ERROR_ILLEGAL)
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def space_size(self): raise Exception(sp.CONST__ERROR_ILLEGAL)
-    def to_cpp(self) -> cTT_Pred: return cTT_Pred(self.alias.to_cpp(), self.value.to_cpp(), self.ops[0].to_cpp())
+    def to_cpp(self) -> cTT_Pred: return cTT_Pred(self.alias.to_cpp(), self.value.to_cpp(), self.op.to_cpp())
     @staticmethod
     def tt(): return 'pred'
 class TT_Ext(TT_Base):
@@ -1081,7 +1081,7 @@ class TT_Param:
         if not old == new:
             raise Exception("Class {0}: TT_Param {1} benchmark compare error".format(class_name, old))
 
-        self.enc_alias = [self.alias.value] + list(itt.chain.from_iterable((i.value.value, i.value.alias.value) for i in self.extensions)) + [o.alias for o in self.ops] + list(itt.chain.from_iterable(i.get_enc_alias() for i in self.attr)) # type: ignore
+        self.enc_alias = [self.alias.value] + list(itt.chain.from_iterable((i.value.value, i.value.alias.value) for i in self.extensions)) + [str(o.alias) for o in self.ops] + list(itt.chain.from_iterable(i.get_enc_alias() for i in self.attr)) # type: ignore
 
     def add_accessor(self, class_name, tt_term, cu_sm_details):
         accessors = set([i for i in dir(cu_sm_details.ACCESSORS) if not (i.startswith('__') and i.endswith('__'))])

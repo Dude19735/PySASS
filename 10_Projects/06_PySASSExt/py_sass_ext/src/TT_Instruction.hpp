@@ -22,8 +22,10 @@
 
 namespace SASS {
 
-    using TOperandType = std::variant<TT_Param, TT_List, TT_AttrParam>;
-    using TOperandStateType = std::variant<TT_Param_State, TT_List_State, TT_AttrParam_State>;
+    // NOTE: derived types (for example TT_AttrParam) MUST be listed before their base types (for example TT_Param) in an std::variant.
+    // If this is not respected, the derived type will be casted to its base type by the std::variant constructor and everything will suck!
+    using TOperandType = std::variant<TT_AttrParam, TT_Param, TT_List>;
+    using TOperandStateType = std::variant<TT_AttrParam_State, TT_Param_State, TT_List_State>;
     constexpr size_t operand_type_size = std::variant_size_v<TOperandType>;
     static_assert(std::variant_size_v<TOperandType> == std::variant_size_v<TOperandStateType>);
 
@@ -92,11 +94,12 @@ namespace SASS {
             return res.str();
         }
 
-        TT_Pred pred() const noexcept { return _pred; }
-        TT_Opcode opcode() const noexcept { return _opcode; }
-        TOperandVec regs() const noexcept { return _regs; }
-        TCashVec cashs() const noexcept { return _cashs; }
-        TEvalDict eval() const noexcept { return _eval.eval(); }
+        std::string class_name() const noexcept { return _class_name; }
+        const TT_Pred& pred() const noexcept { return _pred; }
+        const TT_Opcode& opcode() const noexcept { return _opcode; }
+        const TOperandVec& regs() const noexcept { return _regs; }
+        const TCashVec& cashs() const noexcept { return _cashs; }
+        const TEvalDict& eval() const noexcept { return _eval.eval(); }
         
     };
 }

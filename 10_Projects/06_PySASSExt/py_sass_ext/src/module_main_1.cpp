@@ -7,6 +7,7 @@
 // #include <nanobind/stl/unordered_map.h>
 // #include <nanobind/stl/map.h>
 #include <nanobind/stl/variant.h>
+#include <nanobind/nb_cast.h>
 #include <exception>
 #include <sstream>
 #include <variant>
@@ -28,6 +29,73 @@
 #include "TT_Instruction.hpp"
 
 namespace nb = nanobind;
+
+namespace nanobind::detail {
+    template<typename ..._Ts>
+    struct type_caster<std::variant<_Ts...>> {
+        NB_INLINE bool from_python(handle src, uint8_t flags, cleanup_list *) noexcept {
+    //         if constexpr (std::is_floating_point_v<T>) {
+    //             if constexpr (std::is_same_v<T, double>) {
+    //                 return detail::load_f64(src.ptr(), flags, &value);
+    //             } else if constexpr (std::is_same_v<T, float>) {
+    //                 return detail::load_f32(src.ptr(), flags, &value);
+    //             } else {
+    //                 double d;
+    //                 if (!detail::load_f64(src.ptr(), flags, &d))
+    //                     return false;
+    //                 T result = (T) d;
+    //                 if ((flags & (uint8_t) cast_flags::convert)
+    //                         || (double) result == d
+    //                         || (result != result && d != d)) {
+    //                     value = result;
+    //                     return true;
+    //                 }
+    //                 return false;
+    //             }
+    //         } else {
+    //             if constexpr (std::is_signed_v<T>) {
+    //                 if constexpr (sizeof(T) == 8)
+    //                     return detail::load_i64(src.ptr(), flags, (int64_t *) &value);
+    //                 else if constexpr (sizeof(T) == 4)
+    //                     return detail::load_i32(src.ptr(), flags, (int32_t *) &value);
+    //                 else if constexpr (sizeof(T) == 2)
+    //                     return detail::load_i16(src.ptr(), flags, (int16_t *) &value);
+    //                 else
+    //                     return detail::load_i8(src.ptr(), flags, (int8_t *) &value);
+    //             } else {
+    //                 if constexpr (sizeof(T) == 8)
+    //                     return detail::load_u64(src.ptr(), flags, (uint64_t *) &value);
+    //                 else if constexpr (sizeof(T) == 4)
+    //                     return detail::load_u32(src.ptr(), flags, (uint32_t *) &value);
+    //                 else if constexpr (sizeof(T) == 2)
+    //                     return detail::load_u16(src.ptr(), flags, (uint16_t *) &value);
+    //                 else
+    //                     return detail::load_u8(src.ptr(), flags, (uint8_t *) &value);
+    //             }
+    //         }
+        }
+
+        NB_INLINE static handle from_cpp(T src, rv_policy, cleanup_list *) noexcept {
+    //         if constexpr (std::is_floating_point_v<T>) {
+    //             return PyFloat_FromDouble((double) src);
+    //         } else {
+    //             if constexpr (std::is_signed_v<T>) {
+    //                 if constexpr (sizeof(T) <= sizeof(long))
+    //                     return PyLong_FromLong((long) src);
+    //                 else
+    //                     return PyLong_FromLongLong((long long) src);
+    //             } else {
+    //                 if constexpr (sizeof(T) <= sizeof(unsigned long))
+    //                     return PyLong_FromUnsignedLong((unsigned long) src);
+    //                 else
+    //                     return PyLong_FromUnsignedLongLong((unsigned long long) src);
+    //             }
+    //         }
+        }
+
+        NB_TYPE_CASTER(T, const_name<std::is_integral_v<T>>("int", "float"))
+    };
+}
 
 NB_MODULE(_sass_values, m) {
     nb::bind_vector<BitVector>(m, "BitVector")
@@ -66,8 +134,10 @@ NB_MODULE(_sass_values, m) {
     nb::bind_vector<std::vector<std::string>>(m, "AliasVector");
     nb::bind_vector<std::vector<SASS::TT_Ext>>(m, "ExtVector");
     nb::bind_vector<std::vector<SASS::TT_AtOp>>(m, "OpVector");
-    nb::bind_vector<SASS::TCashComponentsVec>(m, "CashComponentsVector");
-    nb::bind_vector<SASS::TOperandVec>(m, "OperandVector");
+
+    // nb::bind_vector<SASS::TCashComponentsVec>(m, "CashComponentsVector");
+    // nb::bind_vector<SASS::TOperandVec>(m, "OperandVector");
+    nb::bind_vector<SASS::TTestVec>(m, "TestVec");
     nb::bind_vector<SASS::TCashVec>(m, "CashVector");
     nb::bind_vector<SASS::TParamVec>(m, "ParamVector");
     nb::bind_map<SASS::TOptions>(m, "OptionsDict");

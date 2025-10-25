@@ -29,6 +29,9 @@ namespace SASS {
     constexpr size_t operand_type_size = std::variant_size_v<TOperandType>;
     static_assert(std::variant_size_v<TOperandType> == std::variant_size_v<TOperandStateType>);
 
+    using TTestType = std::variant<TT_Param>;
+    using TTestVec = std::vector<TTestType>;
+
     using TOperandVec = std::vector<TOperandType>;
     using TOperandStateVec = std::vector<TOperandStateType>;
     using TCashVec = std::vector<TT_Cash>;

@@ -45,6 +45,9 @@ int main()
     using Test_Type10_0 = std::tuple<std::string, TVarVector, bool>;
     using Test_Type10 = std::variant<Test_Type10_0>;
 
+    using Test_Type11_0 = std::tuple<TOptions>;
+    using Test_Type11 = std::variant<Test_Type11_0>;
+
     Test_Type t2 = Test_Type_0{"oh no, am I in the way?", "this is so embarassing...", 15, 11.3f, 19.7};
     Test_Type2 t3 = Test_Type2_0{15, 11.3f, 19.7};
     Test_Type3 t4 = Test_Type3_0{11.3f, 15, 19.7};
@@ -62,6 +65,8 @@ int main()
     Test_Type9 t9_1 = Test_Type9_1{10.1, 2, tsos};
 
     Test_Type10 t10_0 = Test_Type10_0{"hello world", TVarVector{2, 1.0f, 10}, false};
+    
+    Test_Type11 t11_0 = Test_Type11_0{o};
 
 
     TVec v2 = Pickle::dumps(t2);
@@ -75,6 +80,7 @@ int main()
     TVec v9_0 = Pickle::dumps(t9_0);
     TVec v9_1 = Pickle::dumps(t9_1);
     TVec v10_0 = Pickle::dumps(t10_0);
+    TVec v11_0 = Pickle::dumps(t11_0);
 
     Test_Type3 res4 = Pickle::loads<Test_Type3>(v4);
     Test_Type2 res3 = Pickle::loads<Test_Type2>(v3);
@@ -87,6 +93,7 @@ int main()
     Test_Type9 res9_0 = Pickle::loads<Test_Type9>(v9_0);
     Test_Type9 res9_1 = Pickle::loads<Test_Type9>(v9_1);
     Test_Type10 res10_0 = Pickle::loads<Test_Type10>(v10_0);
+    Test_Type11 res11_0 = Pickle::loads<Test_Type11>(v11_0);
 
     bool check2 = res2 == t2;
     bool check3 = res3 == t3;
@@ -99,6 +106,7 @@ int main()
     bool check9_0 = res9_0 == t9_0;
     bool check9_1 = res9_1 == t9_1;
     bool check10_0 = res10_0 == t10_0;
+    bool check11_0 = res11_0 == t11_0;
 
     // { auto x = Pck::get<0>(res2); }
     // { auto x = Pck::get<1>(res2); }

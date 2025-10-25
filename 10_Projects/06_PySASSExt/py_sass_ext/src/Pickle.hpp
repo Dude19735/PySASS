@@ -452,7 +452,7 @@ namespace SASS {
                         return ToData::unpack_args<TCurVar>::vector_2_tuple(bytes);
                     }
                     else {
-                        const std::vector<TSize> ssize = { 0 };
+                        const std::vector<TSize> ssize = { 0, static_cast<TSize>(bytes.size()) };
                         return to_data<TCurVar>(0, ssize, bytes);
                     }
                 }
@@ -704,8 +704,8 @@ namespace SASS {
 
         template<typename Ts, Ts... I>
         static void unpack(T& self, const BitVector& state, const std::integer_sequence<Ts, I...>& int_seq) {
-            new(&self) T(std::visit([&](const auto& obj) { 
-                return T( std::get<I>(obj)... ); },  Pickle::loads<TState>(state))
+            new(&self) T(std::visit([&](const auto& obj) 
+                { return T( std::get<I>(obj)... ); },  Pickle::loads<TState>(state))
             );
         }
 

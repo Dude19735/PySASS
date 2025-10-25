@@ -605,8 +605,6 @@ NB_MODULE(_sass_values, m) {
     .def("__getstate__", &SASS::TT_Default::__getstate__ )
     .def("__setstate__", &SASS::TT_Default::__setstate__ );
 
-    nb::class_<SASS::TT_NoDefault, SASS::TT_Default>(m, "TT_NoDefault").def(nb::init<>());
-
     nb::class_<SASS::TT_FuncArg>(m, "TT_FuncArg")
     .def(nb::init<SASS::TValue, bool, bool, int, bool, int, bool, int>(), nb::arg("arg_val"), nb::arg("has_star"), nb::arg("has_print"), nb::arg("bit_len"), nb::arg("has_default"), nb::arg("default_val"), nb::arg("has_max_val"), nb::arg("max_val"))
     .def_prop_ro("value", &SASS::TT_FuncArg::value)
@@ -636,11 +634,10 @@ NB_MODULE(_sass_values, m) {
     .def("__setstate__", &SASS::TT_Func::__setstate__ );
 
     nb::class_<SASS::TT_Reg>(m, "TT_Reg")
-    .def(nb::init<std::string, SASS::TT_Default, SASS::TOptions, SASS::TT_Alias>(), nb::arg("value"), nb::arg("default_val"), nb::arg("options"), nb::arg("alias"))
+    .def(nb::init<std::string, SASS::TT_Default, SASS::TT_Alias>(), nb::arg("value"), nb::arg("default_val"), nb::arg("alias"))
     .def_prop_ro("alias", &SASS::TT_Reg::alias)
     .def_prop_ro("value", &SASS::TT_Reg::value)
     .def_prop_ro("default", &SASS::TT_Reg::default_)
-    .def_prop_ro("options", &SASS::TT_Reg::options)
     .def_prop_ro("min_bit_len", &SASS::TT_Reg::min_bit_len)
     .def("get_domain", &SASS::TT_Reg::get_domain, nb::arg("to_limit"), nb::arg("filter_invalid"))
     .def("sass_from_bits", &SASS::TT_Reg::sass_from_bits, nb::arg("bits"))

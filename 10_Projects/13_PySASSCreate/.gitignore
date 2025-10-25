@@ -48,7 +48,8 @@ __auto_generated_*
 __install_log_*
 *.autogen.*
 /py_sass/py_sass.egg-info/*
-/dist/*
+/dist/**
+nogit__*
 
 # remove this at some point
 *.typed

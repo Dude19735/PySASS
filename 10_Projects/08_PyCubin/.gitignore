@@ -44,6 +44,8 @@ __auto_generated_*
 __install_log_*
 *.autogen.*
 *.db
+/dist/**
+/py_cubin.egg-info/**
 
 # remove this at some point
 *.typed

@@ -8,5 +8,5 @@
 # from ._sass_values import StrVector
 # from ._sass_values import FixedPickVector
 
-from ._cpp import *
-from ._sass_values import *
+from ._cpp import * # type: ignore
+from ._sass_values import * # type: ignore

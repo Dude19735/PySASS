@@ -51,6 +51,7 @@ __install_log_*
 *.autogen.*
 *.history
 !MANIFEST.in
-
+/dist/**
+/py_sass.egg-info/**
 # remove this at some point
 *.typed

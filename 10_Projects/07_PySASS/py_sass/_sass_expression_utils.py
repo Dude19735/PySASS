@@ -5,7 +5,7 @@ import operator as oo
 from . import _config as sp
 from py_sass_ext import SASS_Bits
 from ._sass_util import SASS_Util as su
-if not sp.SWITCH__USE_TT_EXT:
+if not sp.SWITCH__USE_OP_EXT:
     from ._tt_terms import TT_OpAtAbs, TT_OpAtNot, TT_OpAtInvert, TT_OpAtNegate, TT_OpAtSign
 else:
     from py_sass_ext import TT_OpAtAbs, TT_OpAtNot, TT_OpAtInvert, TT_OpAtNegate, TT_OpAtSign, TT_AtOp
@@ -105,9 +105,9 @@ class Op_AtOperand(Op_Operand):
         if not str(self) in enc_vals.keys(): raise Exception(sp.CONST__ERROR_UNEXPECTED)
         return enc_vals[str(self)]
     def __init__(self, name:str, term:object, tt_type:str, op_name:str):
-        if (not sp.SWITCH__USE_TT_EXT) and (not isinstance(term, TT_OpAtAbs|TT_OpAtNot|TT_OpAtInvert|TT_OpAtNegate|TT_OpAtSign)):
+        if (not sp.SWITCH__USE_OP_EXT) and (not isinstance(term, TT_OpAtAbs|TT_OpAtNot|TT_OpAtInvert|TT_OpAtNegate|TT_OpAtSign)):
             raise Exception(sp.CONST__ERROR_UNEXPECTED)
-        elif (sp.SWITCH__USE_TT_EXT) and (not isinstance(term, TT_AtOp)):
+        elif (sp.SWITCH__USE_OP_EXT) and (not isinstance(term, TT_AtOp)):
             raise Exception(sp.CONST__ERROR_UNEXPECTED)
 
         super().__init__(self.operation_at, name + op_name, term)

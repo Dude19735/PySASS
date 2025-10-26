@@ -4,7 +4,7 @@ import itertools as itt
 from . import _config as sp
 from ._sass_expression_ops import Op_Constant, Op_ConstBankAddress2, Op_ConstBankAddress0
 from ._tt_instruction import TT_Instruction
-if not sp.SWITCH__USE_TT_EXT:
+if not sp.SWITCH__USE_PROPS_EXT:
     from ._tt_terms import TT_Opcode, TT_Param, TT_List, TT_Reg, TT_Ext
     from ._tt_terms import TT_Func
 else:
@@ -59,9 +59,6 @@ class SASS_Class_Props:
         self.__has_usched_info = False
         self.__has_batch_t = False
         self.__has_pm_pred = False
-
-        Op_ConstBankAddress2
-        Op_ConstBankAddress0
 
         # Check each cash entry for which one it is and set a flag if present
         for x in format_tt.cashs:
@@ -1256,7 +1253,7 @@ class SASS_Class_Props:
                         self.__has_imm = True
                         add_ext(j.extensions, j)
                         add_func(j, self.__list_rf_alias)
-                        self.__alias_ops = self.__alias_ops.union(set(str(e.alias) for e in j.ops if not e.alias.endswith('@sign')))
+                        self.__alias_ops = self.__alias_ops.union(set(str(e.alias) for e in j.ops if not str(e.alias).endswith('@sign')))
                 add_ext(i.extensions, i)
 
             elif isinstance(i.value, TT_Reg):

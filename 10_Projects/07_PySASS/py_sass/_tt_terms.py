@@ -772,9 +772,17 @@ class TT_Opcode:
             raise Exception("TT_Opcode {0} for class {1} has default".format(str(tt_term), self.class_name))
 
         self.extensions = []
+        used_regs = set()
         for ext in tt_term.ext:
+            # Only use keys that are unique. See _tt_instruction.py for more information (there is a giant comment there explaining the situation)
             self.extensions.append(TT_Ext(class_name, ext, cu_sm_details))
-            self.eval.update(self.extensions[-1].eval)
+            for k,v in self.extensions[-1].eval.items():
+                if k in self.eval:
+                    del self.eval[k]
+                    used_regs.add(k)
+                elif k not in used_regs:
+                    self.eval[k] = v
+            # self.eval.update(self.extensions[-1].eval)
             self.eval_alias.update(self.extensions[-1].eval_alias)
             self.operand_index.extend(self.extensions[-1].operand_index)
         
@@ -993,9 +1001,17 @@ class TT_Param:
                     self.ops[-1].add_func(self.value.func)
                     self.ops[-1].set_alias(str(self.alias))
 
+            used_regs = set()
             for ext in tt_term.ext:
+                # Only use keys that are unique. See _tt_instruction.py for more information (there is a giant comment there explaining the situation)
                 self.extensions.append(TT_Ext(class_name, ext, cu_sm_details))
-                self.eval.update(self.extensions[-1].eval)
+                for k,v in self.extensions[-1].eval.items():
+                    if k in self.eval:
+                        del self.eval[k]
+                        used_regs.add(k)
+                    elif k not in used_regs:
+                        self.eval[k] = v
+                # self.eval.update(self.extensions[-1].eval)
                 self.eval_alias.update(self.extensions[-1].eval_alias)
                 self.operand_index.extend(self.extensions[-1].operand_index)
 

@@ -1,5 +1,6 @@
 import typing
 import itertools as itt
+import termcolor as tc
 from py_sass_ext import SASS_Bits
 from py_sass_ext import TT_Instruction as cTT_Instruction
 from py_sass_ext import TT_Pred as cTT_Pred
@@ -209,6 +210,23 @@ class TT_Instruction:
         Initially, when an instruction class is parsed, we get a list of TT_Term. This method
         translates an instruction class into the final structure made up of TT_Predicate, TT_Opcode, TT_Param and TT_Cash.
         """
+        # The goal for self.eval is key-uniqueness. This is always the case if we use aliases. For register names, though, it's not.
+        # More often that it's nice, extension registers use the register name in the encoding stage instead of their alias. Since
+        # encoding requires uniqueness of whatever identifier is used (register name or alias), if we find that self.value.value
+        # (that is the register name) is alreay in self.eval, we remove it. Otherwise we add it. All of this only for extension registers.
+        # For example:
+        #   CLASS "FFMA"
+        #     FORMAT PREDICATE @[!]Predicate(PT):Pg Opcode /FMZ(noFTZ):fmz /Round1(RN):rnd /SAT(noSAT):sat
+        #              $( RegisterFAU:Rd /optCC(noCC):writeCC )$
+        #              ',' $( [-] RegisterFAU:Ra {/REUSE(noreuse):reuse_src_a} )$
+        #              ',' $( [-] RegisterFAU:Rb {/REUSE(noreuse):reuse_src_b} )$
+        #              ',' $( [-] RegisterFAU:Rc {/REUSE(noreuse):reuse_src_c} )$
+        # has REUSE appearing 3 times. REUSE is a register, appearing with three separate aliases. In this case we don't add REUSE
+        # to self.eval becase the next one would overwrite the entry and at the end we may not know which one is in there of the three.
+        # Luckily there is no case where this has been an issue so far.
+        #   The instruction also has SAT as extension register for the opcode (/SAT(noSAT):sat). In this case, in the encoding stage,
+        # it may be that SAT is used instead of sat because it doesn't appear anywhere else in the instruction. In this case we keep it.
+
         old = str(self)
         if self.pred:
             self.pred = TT_Pred(self.class_name, self.pred, sm_details)
@@ -219,7 +237,14 @@ class TT_Instruction:
         if not self.opcode:
             raise Exception("Class {0}: missing opcode".format(self.class_name))            
         self.opcode = TT_Opcode(self.class_name, self.opcode, sm_details)
-        self.eval.update(self.opcode.eval)
+        used_regs = set()
+        for k,v in self.opcode.eval.items():
+            if k in self.eval:
+                del self.eval[k]
+                used_regs.add(k)
+            elif k not in used_regs:
+                self.eval[k] = v
+        # self.eval.update(self.opcode.eval)
         self.eval_alias.update(self.opcode.eval_alias)
         self.operand_index.extend(self.opcode.operand_index)
         
@@ -228,7 +253,13 @@ class TT_Instruction:
             for r in self.regs:
                 reg:TT_Param|TT_List = self.to_param(r, sm_details)
                 regs.append(reg)
-                self.eval.update(reg.eval)
+                for k,v in reg.eval.items():
+                    if k in self.eval:
+                        del self.eval[k]
+                        used_regs.add(k)
+                    elif k not in used_regs:
+                        self.eval[k] = v
+                # self.eval.update(reg.eval)
                 self.eval_alias.update(reg.eval_alias)
                 self.operand_index.extend(reg.operand_index)
             self.regs = regs
@@ -267,31 +298,43 @@ class TT_Instruction:
 
         str_old = str(self)
         str_new = str(instr)
-        if not (str_old == str_new): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+        if not (str_old == str_new): 
+            print("Trouble with {0}".format(tc.colored("[{0}]".format(self.class_name), 'red')))
+            raise Exception(sp.CONST__ERROR_UNEXPECTED)
 
         eval_old = self.eval
         eval_new = instr.eval
 
         eval_old_str = {k:str(v) for k,v in sorted(eval_old.items())}
         eval_new_str = {k:str(v) for k,v in sorted(eval_new.items())}
-        if not (eval_old_str == eval_new_str): raise Exception(sp.CONST__ERROR_ILLEGAL)
+        if not (eval_old_str == eval_new_str): 
+            print("Trouble with {0}".format(tc.colored("[{0}]".format(self.class_name), 'red')))
+            raise Exception(sp.CONST__ERROR_ILLEGAL)
 
         if self.pred:
             pred_old_enc_vals = sorted(self.pred.get_enc_alias())
             pred_new_enc_vals = sorted(instr.pred.get_enc_alias())
-            if not (pred_old_enc_vals == pred_new_enc_vals): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+            if not (pred_old_enc_vals == pred_new_enc_vals): 
+                print("Trouble with {0}".format(tc.colored("[{0}]".format(self.class_name), 'red')))
+                raise Exception(sp.CONST__ERROR_UNEXPECTED)
 
         opcode_old_enc_vals = sorted(self.opcode.get_enc_alias())
         opcode_new_enc_vals = sorted(instr.opcode.get_enc_alias())
-        if not (opcode_old_enc_vals == opcode_new_enc_vals): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+        if not (opcode_old_enc_vals == opcode_new_enc_vals): 
+            print("Trouble with {0}".format(tc.colored("[{0}]".format(self.class_name), 'red')))
+            raise Exception(sp.CONST__ERROR_UNEXPECTED)
 
         regs_old_enc_vals = [sorted(i.get_enc_alias()) for i in self.regs]
         regs_new_enc_vals = [sorted(i.get_enc_alias()) for i in instr.regs]
-        if not (all(i==j for i,j in zip(regs_old_enc_vals, regs_new_enc_vals))): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+        if not (all(i==j for i,j in zip(regs_old_enc_vals, regs_new_enc_vals))): 
+            print("Trouble with {0}".format(tc.colored("[{0}]".format(self.class_name), 'red')))
+            raise Exception(sp.CONST__ERROR_UNEXPECTED)
 
         cashs_old_enc_vals = [sorted(i.get_enc_alias()) for i in self.cashs]
         cashs_new_enc_vals = [sorted(i.get_enc_alias()) for i in instr.cashs]
-        if not (all(i==j for i,j in zip(cashs_old_enc_vals, cashs_new_enc_vals))): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+        if not (all(i==j for i,j in zip(cashs_old_enc_vals, cashs_new_enc_vals))): 
+            print("Trouble with {0}".format(tc.colored("[{0}]".format(self.class_name), 'red')))
+            raise Exception(sp.CONST__ERROR_UNEXPECTED)
 
         return instr
 

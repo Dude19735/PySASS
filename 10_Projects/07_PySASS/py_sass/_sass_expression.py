@@ -9,10 +9,12 @@ import typing as typ
 from . import _config as sp
 from . import _sass_func
 from ._tt_instruction import TT_Instruction
-if not sp.SWITCH__USE_TT_EXT:
+if not sp.SWITCH__USE_OP_EXT:
     from ._tt_terms import TT_Reg, TT_Func
+    from ._tt_terms import AT_OP
 else:
     from py_sass_ext import TT_Reg, TT_Func, TT_OpCashQuestion, TT_OpCashAnd, TT_OpCashAssign, TT_OpAtNegate, TT_OpAtNot, TT_OpAtInvert, TT_OpAtSign, TT_OpAtAbs, TT_AtOp
+    AT_OP = {'?':TT_OpCashQuestion, '&':TT_OpCashAnd, '=':TT_OpCashAssign, '-':TT_OpAtNegate, '!':TT_OpAtNot, '~':TT_OpAtInvert, '&&':TT_OpAtSign, '||':TT_OpAtAbs}
 from ._sass_expression_utils import Op_Base
 from ._sass_expression_utils import Op_Iter
 from ._sass_expression_ops import *
@@ -23,10 +25,6 @@ from .sm_cu_details import SM_Cu_Details
 from py_sass_ext import SASS_Bits
 from py_sass_ext import BitVector
 
-if sp.SWITCH__USE_TT_EXT:
-    AT_OP = {'?':TT_OpCashQuestion, '&':TT_OpCashAnd, '=':TT_OpCashAssign, '-':TT_OpAtNegate, '!':TT_OpAtNot, '~':TT_OpAtInvert, '&&':TT_OpAtSign, '||':TT_OpAtAbs}
-else:
-    from ._tt_terms import AT_OP
 
 class SASS_Expr:
     def __init__(self, expr:str, tables:dict, constants:dict, registers:dict, parameters:dict, tables_inv:dict):
@@ -270,7 +268,8 @@ class SASS_Expr:
                 elif i_value in eval_sets:
                     # replace Op_Value that represents a set with the real set including sub operations, if need be
                     split.extend([Op_LBrace()] + eval_sets[i.value()].expr + [Op_RBrace()])
-                else: raise Exception("Op_Value not found in alias list")
+                else: 
+                    raise Exception("Op_Value not found in alias list")
             else: split.append(i)
 
         for i in split:

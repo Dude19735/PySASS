@@ -212,7 +212,8 @@ class Instr_EncDec_Lookup:
             if d_set == v.d_set:
                 # NOTE: the non-alternate classes always come first. If we find a duplicate and it's not an
                 # ALTERNATE, it's a bug.
-                if not is_alternate: raise Exception(sp.CONST__ERROR_UNEXPECTED)
+                if not is_alternate: 
+                    raise Exception(sp.CONST__ERROR_UNEXPECTED)
                 # If it's an ALTERNATE, we have to make sure that it has the same number of CASHS as it's parent. If this is not
                 # the case and for example, the parent has more cash definitions than it's child, the decode post processing will
                 # augment the cash definitions wrongly.

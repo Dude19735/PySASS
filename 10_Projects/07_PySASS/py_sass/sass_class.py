@@ -174,7 +174,9 @@ class SASS_Class:
         # Transform the objects to their CPP equivalents
         # format_tt2:cTT_Instruction
         # format_tt2 = format_tt.to_cpp()
+        # print(self.class_name, "...................")
         cformat_tt:cTT_Instruction = format_tt.to_cpp()
+        # print("...................", "ok")
         # self.FORMAT = format_tt2
 
         # finalize the conditions: replace all remaining Op_Value with other stuff

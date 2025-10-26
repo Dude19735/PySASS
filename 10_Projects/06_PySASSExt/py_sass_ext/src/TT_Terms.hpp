@@ -83,6 +83,7 @@ namespace SASS {
         bool operator==(const TT_Alias& other) const noexcept { if(this == &other) return true; return (_TT_Base::operator==(other)); }
         virtual std::string alias() const noexcept { return std::get<std::string>(value()); };
         const TT_Alias_State get_state(TT_Alias* selfp=nullptr) const override { return std::make_tuple(alias(), _is_at_alias); }
+        bool is_at_alias() const noexcept { return _is_at_alias; }
     };
 
     class _TT_WithAlias { public: virtual const TT_Alias& alias() const noexcept = 0; };
@@ -492,7 +493,7 @@ namespace SASS {
         const TEvalDict& eval() const noexcept { return _eval.eval(); }
         const TT_Alias& alias() const noexcept override { return _reg.alias(); }
 
-        std::string __str__() const override { return std::string("@[") + _op.__str__() + "]" + _reg.__str__() + ":" + _reg.alias().__str__(); }
+        std::string __str__() const override { return std::string("@[") + _op.__str__() + "]" + _reg.__str__(); }
         std::vector<std::string> get_enc_alias() const noexcept override { return { _op.alias().alias() }; }
         const TT_Pred_State get_state(TT_Pred* selfp=nullptr) const override { return std::make_tuple(_reg.get_state(), _op.get_state()); }
     };
@@ -891,18 +892,6 @@ namespace SASS {
                     const auto& p = std::get<TT_Param>(v);
                     res.insert(p.eval().begin(), p.eval().end());
                 }
-                // else {
-                //     const auto& p = std::get<TT_CashComponent>(v);
-                //     if(p.is() == TT_CashComponentType::AND) {
-
-                //     }
-                //     else if(p.is() == TT_CashComponentType::ASSIGN) {
-
-                //     }
-                //     else if(p.is() == TT_CashComponentType::QUESTION) {
-
-                //     }
-                // }
             }
             return res;
         }

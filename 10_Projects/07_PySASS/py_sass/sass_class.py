@@ -122,13 +122,13 @@ from . import _config as sp
 from ._sass_expression_ops import Op_Constant
 from ._sass_expression import SASS_Expr
 from ._sass_expression_domain_contract import SASS_Expr_Domain_Contract
-from ._tt_instruction import TT_Instruction
-from py_sass_ext import TT_Instruction as cTT_Instruction
 from ._tt_term import TT_Term
 if not sp.SWITCH__USE_TT_EXT:
     from ._tt_terms import TT_Func, TT_Reg, TT_List, TT_Param, TT_Pred, TT_Cash
 else:
     from py_sass_ext import TT_Func, TT_Reg, TT_List, TT_Param, TT_Pred, TT_Cash
+from ._tt_instruction import TT_Instruction
+from py_sass_ext import TT_Instruction as cTT_Instruction
 from ._sass_class import _SASS_Class
 from ._iterator import Iterator
 from .sm_cu_details import SM_Cu_Details
@@ -174,7 +174,7 @@ class SASS_Class:
         # Transform the objects to their CPP equivalents
         # format_tt2:cTT_Instruction
         # format_tt2 = format_tt.to_cpp()
-        format_tt.to_cpp()
+        cformat_tt:cTT_Instruction = format_tt.to_cpp()
         # self.FORMAT = format_tt2
 
         # finalize the conditions: replace all remaining Op_Value with other stuff

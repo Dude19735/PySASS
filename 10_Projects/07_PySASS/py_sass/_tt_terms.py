@@ -18,6 +18,7 @@ from ._sass_util import SASS_Util as su
 from .sm_cu_details import SM_Cu_Details
 from py_sass_ext import SASS_Bits
 from py_sass_ext import BitVector
+from py_sass_ext import IntVector
 from py_sass_ext import OptionsDict, CashComponentsVector, ExtVector, ParamVector, OpsVector, ListVector
 from py_sass_ext import TT_Alias as cTT_Alias
 from py_sass_ext import TT_Reg as cTT_Reg
@@ -30,7 +31,6 @@ from py_sass_ext import TT_Default as cTT_Default
 from py_sass_ext import TT_Ext as cTT_Ext
 from py_sass_ext import TT_Func as cTT_Func
 from py_sass_ext import TT_FuncArg as cTT_FuncArg
-from py_sass_ext import TT_NoDefault as cTT_NoDefault
 from py_sass_ext import TT_ICode as cTT_ICode
 from py_sass_ext import TT_List as cTT_List
 from py_sass_ext import TT_Opcode as cTT_Opcode
@@ -65,15 +65,16 @@ class TTs_Utils:
         return args['arg']
 
 class TT_Alias:
-    def __init__(self, class_name:str, alias:str):
+    def __init__(self, class_name:str, alias:str, is_at_alias:bool):
         self.value = alias
         self.class_name = class_name
+        self.is_at_alias = is_at_alias
 
     def __str__(self): return self.value
     def set_decode_value(self, decode_value:SASS_Bits) -> None: raise Exception("Illegal")
     def get_decode_value(self) -> None: raise Exception("Illegal")
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
-    def to_cpp(self) -> cTT_Alias: return cTT_Alias(self.value)
+    def to_cpp(self) -> cTT_Alias: return cTT_Alias(self.value, self.is_at_alias)
 
 class TT_Op:
     """
@@ -117,7 +118,7 @@ class TT_OpAtNot(TT_Base):
     @property
     def alias(self):
         if self.__reg_alias is None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
-        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name)
+        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name, False)
     def set_alias(self, reg_alias:str): self.__reg_alias = reg_alias
     def min_bit_len(self): return self.__min_bit_len
     def __str__(self): return TT_Op.as_str(self.__op_sign)
@@ -133,7 +134,7 @@ class TT_OpAtNot(TT_Base):
     def has_func(self): return False
     def space_size(self): return TT_Op.space_size()
     def get_domain(self, to_limit:dict): return TT_Op.get_domain()
-    def to_cpp(self) -> cTT_OpAtNot: return cTT_OpAtNot(self.__reg_alias)
+    def to_cpp(self) -> cTT_OpAtNot: return cTT_OpAtNot(self.__reg_alias if self.__reg_alias is not None else "")
 class TT_OpAtNegate(TT_Base):
     """
     This one represents [-]
@@ -153,7 +154,7 @@ class TT_OpAtNegate(TT_Base):
     @property
     def alias(self):
         if self.__reg_alias is None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
-        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name)
+        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name, False)
     def set_alias(self, reg_alias:str): self.__reg_alias = reg_alias
     def min_bit_len(self): return self.__min_bit_len
     # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr) -> SASS_Bits:
@@ -171,7 +172,7 @@ class TT_OpAtNegate(TT_Base):
     def has_func(self): return False
     def space_size(self): return TT_Op.space_size()
     def get_domain(self, to_limit:dict): return TT_Op.get_domain()
-    def to_cpp(self) -> cTT_OpAtNegate: return cTT_OpAtNegate(self.__reg_alias)
+    def to_cpp(self) -> cTT_OpAtNegate: return cTT_OpAtNegate(self.__reg_alias if self.__reg_alias is not None else "")
 class TT_OpAtAbs(TT_Base):
     """
     This one represents [!!]
@@ -191,7 +192,7 @@ class TT_OpAtAbs(TT_Base):
     @property
     def alias(self):
         if self.__reg_alias is None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
-        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name)
+        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name, False)
     def set_alias(self, reg_alias:str): self.__reg_alias = reg_alias
     def min_bit_len(self): return self.__min_bit_len
     # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr) -> SASS_Bits:
@@ -209,7 +210,7 @@ class TT_OpAtAbs(TT_Base):
     def has_func(self): return False
     def space_size(self): return TT_Op.space_size()
     def get_domain(self, to_limit:dict): return TT_Op.get_domain()
-    def to_cpp(self) -> cTT_OpAtAbs: return cTT_OpAtAbs(self.__reg_alias)
+    def to_cpp(self) -> cTT_OpAtAbs: return cTT_OpAtAbs(self.__reg_alias if self.__reg_alias is not None else "")
 class TT_OpAtSign(TT_Base):
     """
     This one represents [&&] (somehow I can't find it anymore XD)
@@ -233,7 +234,7 @@ class TT_OpAtSign(TT_Base):
     @property
     def alias(self):
         if self.__reg_alias is None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
-        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name)
+        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name, False)
     def set_alias(self, reg_alias:str): self.__reg_alias = reg_alias
     def min_bit_len(self): return self.__min_bit_len
     # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr) -> SASS_Bits:
@@ -254,7 +255,7 @@ class TT_OpAtSign(TT_Base):
         self.__func = func
     def space_size(self): return TT_Op.space_size()
     def get_domain(self, to_limit:dict): return TT_Op.get_domain()
-    def to_cpp(self) -> cTT_OpAtSign: return cTT_OpAtSign(self.__reg_alias)
+    def to_cpp(self) -> cTT_OpAtSign: return cTT_OpAtSign(self.__reg_alias if self.__reg_alias is not None else "")
 class TT_OpAtInvert(TT_Base):
     """
     This one represents [~]
@@ -274,7 +275,7 @@ class TT_OpAtInvert(TT_Base):
     @property
     def alias(self):
         if self.__reg_alias is None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
-        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name)
+        return TT_Alias(self.class_name, self.__reg_alias + self.__op_name, False)
     def set_alias(self, reg_alias:str): self.__reg_alias = reg_alias
     def min_bit_len(self): return self.__min_bit_len
     # def __call__(self, args:typing.Dict, format_eval:typing.Dict, e_ptr) -> SASS_Bits:
@@ -292,7 +293,7 @@ class TT_OpAtInvert(TT_Base):
     def has_func(self): return False
     def space_size(self): return TT_Op.space_size()
     def get_domain(self, to_limit:dict): return TT_Op.get_domain()
-    def to_cpp(self) -> cTT_OpAtInvert: return cTT_OpAtInvert(self.__reg_alias)
+    def to_cpp(self) -> cTT_OpAtInvert: return cTT_OpAtInvert(self.__reg_alias if self.__reg_alias is not None else "")
 class TT_OpCashQuestion:
     """
     This one represents '?'
@@ -343,7 +344,9 @@ class TT_Default(TT_Base):
         self.class_name = class_name
         self.options = options
         if not isinstance(def_name, int|str): raise Exception(sp.CONST__ERROR_NOT_TESTED)
-        self.value =  su.try_convert(def_name, convert_hex=True, convert_bin=True)
+        val = su.try_convert(def_name, convert_hex=True, convert_bin=True)
+        if not isinstance(val, int|str): raise Exception(sp.CONST__ERROR_ILLEGAL)
+        self.value:str|int =  val
         self.has_print = has_print
         if not self.value in self.options:
             raise Exception("TT_Default for class {0} has a value {1} not contained in options {2}".format(class_name, self.value, options))
@@ -365,7 +368,7 @@ class TT_FuncArg:
         self.has_star = False
         self.has_print = False
         self.bit_len = 0
-        self.default_val = 0
+        self.default_val:int = 0
         self.has_default = False
         self.has_max_val = False
         self.max_val = 0
@@ -381,7 +384,9 @@ class TT_FuncArg:
                 self.has_print = True
             bb,dd = arg_val.split('/')
             self.bit_len = int(bb)
-            self.default_val = su.try_convert(dd, convert_bin=True, convert_hex=True)
+            default_val = su.try_convert(dd, convert_bin=True, convert_hex=True)
+            if not isinstance(default_val, int): raise Exception(sp.CONST__ERROR_ILLEGAL)
+            self.default_val = default_val
             self.has_default = True
         else:
             self.bit_len = self.arg_val
@@ -411,7 +416,7 @@ class TT_Reg(TT_Base):
         self.class_name = class_name
         self.value = reg_name
         self.options = options
-        self.alias = None
+        self.alias:TT_Alias|None = None
         self.__decode_value = None
         self.arg_default = arg_default
         if not self.value in options:
@@ -427,7 +432,9 @@ class TT_Reg(TT_Base):
         return SASS_Bits(bits, bit_len=bit_len, signed=False)
     def __str__(self):
         res = self.value
+        if self.alias is None: raise Exception(sp.CONST__ERROR_ILLEGAL)
         if self.arg_default: res += "(" + str(self.arg_default) + ")"
+        res += ("@" if self.alias.is_at_alias else "") + ((":" + str(self.alias)) if self.alias is not None else "")
         return res
     def get_domain(self, to_limit:dict, filter_invalid:bool=False):
         if self.value in to_limit.keys():
@@ -467,16 +474,17 @@ class TT_Reg(TT_Base):
     def eval_str(self) -> str: raise Exception("Unexpected behaviour exception")
     def space_size(self): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def to_cpp(self) -> cTT_Reg: 
-        if self.arg_default is None: return cTT_Reg(self.value, cTT_NoDefault(), self.options[self.value], self.alias.to_cpp())
-        else: return cTT_Reg(self.value, self.arg_default.to_cpp(), self.options[self.value], self.alias.to_cpp())
+        if self.alias is None: raise Exception(sp.CONST__ERROR_ILLEGAL)
+        if self.arg_default is None: return cTT_Reg(self.value, cTT_Default(-1, False, OptionsDict({})), self.alias.to_cpp())
+        else: return cTT_Reg(self.value, self.arg_default.to_cpp(), self.alias.to_cpp())
     @staticmethod
     def tt(): return 'reg'
 class TT_ICode(TT_Base):
     def __init__(self, class_name:str):
         self.class_name = class_name
-        self.bin_str = None
-        self.bin_ind = None
-        self.bin_tup = None
+        self.bin_str:str|None = None
+        self.bin_ind:list = []
+        self.bin_tup:tuple = ()
         self.__decode_value = None
         self.__min_bit_len = None
     @property
@@ -484,7 +492,7 @@ class TT_ICode(TT_Base):
     @property
     def alias(self): return ''
     def min_bit_len(self): return self.__min_bit_len
-    def set_opcode_bin(self, bin_str, bin_ind):
+    def set_opcode_bin(self, bin_str:str, bin_ind:list):
         self.bin_str = bin_str
         self.bin_ind = bin_ind
         self.bin_tup = tuple(int(i) for i in self.bin_str.replace('_',''))
@@ -500,9 +508,11 @@ class TT_ICode(TT_Base):
         return self.__decode_value
     def eval_str(self) -> str: raise Exception("Illegal")
     def space_size(self): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
-    def to_cpp(self) -> cTT_ICode: return cTT_ICode(self.bin_str, self.bin_ind[0], self.bin_tup)
+    def to_cpp(self) -> cTT_ICode: 
+        if self.bin_str is None: raise Exception(sp.CONST__ERROR_ILLEGAL)
+        return cTT_ICode(self.bin_str, self.bin_ind[0], IntVector(self.bin_tup))
 class TT_Func(TT_Base):
-    def __init__(self, class_name:str, func_name:str, alias:str, arg_default:TT_FuncArg, options:set, star:bool):
+    def __init__(self, class_name:str, func_name:str, alias:TT_Alias, arg_default:TT_FuncArg, options:set, star:bool):
         if not isinstance(options, set): raise Exception(sp.CONST__ERROR_UNEXPECTED)
         self.class_name = class_name
         self.value = func_name
@@ -512,13 +522,15 @@ class TT_Func(TT_Base):
         self.arg_default:TT_FuncArg = arg_default
         self.star = star
         self.is_address = False
-        self.alias = alias # this is the same as one level up, but it's needed here too
+        self.alias:TT_Alias = alias # this is the same as one level up, but it's needed here too
         if self.value not in sf.FIXED_BIT_FUNC: self.func = sf.FUNC[self.value](self.arg_default.bit_len)
         else: self.func = sf.FUNC[self.value]()
     def min_bit_len(self): return self.arg_default.bit_len
     def __str__(self):
         res = self.value + "(" + str(self.arg_default) + ")"
         if self.star: res += '*'
+        if self.alias.is_at_alias: res += "@"
+        res += ":" + str(self.alias)
         return res
     def sass_from_bits(self, bits:BitVector) -> SASS_Bits:
         if not isinstance(bits, BitVector): raise Exception(sp.CONST__ERROR_ILLEGAL)
@@ -569,7 +581,7 @@ class TT_Func(TT_Base):
     def eval_str(self) -> str: raise Exception("Unexpected behaviour exception")
     def set_for_constBank(self, sm_details:SM_Cu_Details): self.arg_default.set_max_val(sm_details.PARAMETERS.MAX_CONST_BANK) # type: ignore
     def set_for_addr(self): self.is_address = True
-    def to_cpp(self) -> cTT_Func: return cTT_Func(self.value, self.options, self.arg_default.to_cpp(), self.star, self.is_address, cTT_Alias(self.alias))
+    def to_cpp(self) -> cTT_Func: return cTT_Func(self.value, self.options, self.arg_default.to_cpp(), self.star, self.is_address, cTT_Alias(self.alias.value, self.alias.is_at_alias))
     @staticmethod
     def tt(): return 'func'
 ###########################################################################################
@@ -585,7 +597,7 @@ class TT_Pred:
         self.eval = {}
         self.eval_alias = {}
         self.operand_index = []
-        self.is_at_alias = False
+        self.is_at_alias:bool = tt_term.is_at_alias
 
         term = tt_term.val
 
@@ -619,7 +631,7 @@ class TT_Pred:
         alias = term[(def_end+2):]
         if alias == '':
             raise Exception("TT_Pred {0} for class {1}: format error".format(str(tt_term), self.class_name))
-        self.alias = TT_Alias(class_name, alias)
+        self.alias = TT_Alias(class_name, alias, self.is_at_alias)
         self.value.set_alias(self.alias) # the register has to know it's own alias
         self.op.set_alias(str(self.alias)) # the atop has to know the alias as well
         self.eval[self.alias.value] = self.value
@@ -640,13 +652,13 @@ class TT_Pred:
     def __str__(self):
         res = '@[' + str(self.op).strip() + "]"
         res += str(self.value)
-        res += ":" + str(self.alias)
+        # res += ":" + str(self.alias)
         return res
     def set_decode_value(self, decode_value:SASS_Bits) -> None: raise Exception(sp.CONST__ERROR_UNEXPECTED)
     def get_decode_value(self) -> SASS_Bits: raise Exception(sp.CONST__ERROR_ILLEGAL)
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def space_size(self): raise Exception(sp.CONST__ERROR_ILLEGAL)
-    def to_cpp(self) -> cTT_Pred: return cTT_Pred(self.alias.to_cpp(), self.value.to_cpp(), self.op.to_cpp())
+    def to_cpp(self) -> cTT_Pred: return cTT_Pred(self.value.to_cpp(), self.op.to_cpp())
     @staticmethod
     def tt(): return 'pred'
 class TT_Ext(TT_Base):
@@ -663,7 +675,7 @@ class TT_Ext(TT_Base):
         if not tt_term.alias:
             raise Exception("TT_Ext {0} for class {1} has no alias".format(str(tt_term), self.class_name))                        
 
-        self.alias = TT_Alias(class_name, tt_term.alias)
+        self.alias = TT_Alias(class_name, tt_term.alias, tt_term.is_at_alias)
         self.eval_alias[self.alias.value] = self
         self.operand_index = [self.alias.value]
         self.__decode_value = None
@@ -716,8 +728,8 @@ class TT_Ext(TT_Base):
     def __str__(self):
         res = '/'
         res += str(self.value)
-        if self.is_at_alias: res += '@'
-        res += ":" + str(self.alias)
+        # if self.alias.is_at_alias: res += '@'
+        # res += ":" + str(self.alias)
         return res
     def contextual_decode(self, encode_input:SASS_Bits) -> SASS_Bits:
         raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
@@ -729,7 +741,7 @@ class TT_Ext(TT_Base):
         return self.__decode_value
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def space_size(self): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
-    def to_cpp(self) -> cTT_Ext: return cTT_Ext(self.alias.to_cpp(), self.value.to_cpp(), self.is_at_alias)
+    def to_cpp(self) -> cTT_Ext: return cTT_Ext(self.value.to_cpp())
     @staticmethod
     def tt(): return 'ext'
 class TT_Opcode:
@@ -747,7 +759,7 @@ class TT_Opcode:
         if tt_term.alias:
             raise Exception("TT_Opcode {0} for class {1} has distinct alias (supposed to be 'Opcode')".format(str(tt_term), self.class_name))                        
 
-        self.alias = TT_Alias(class_name, tt_term.val)
+        self.alias = TT_Alias(class_name, tt_term.val, tt_term.is_at_alias)
         self.is_at_alias = False
 
         if tt_term.access_func:
@@ -809,7 +821,7 @@ class TT_Opcode:
     def get_decode_value(self) -> SASS_Bits: raise Exception("Unassigned value")
     def eval_str(self) -> str: raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
     def space_size(self): raise Exception(sp.CONST__ERROR_NOT_IMPLEMENTED)
-    def to_cpp(self) -> cTT_Opcode: return cTT_Opcode(self.alias.to_cpp(), self.value.to_cpp(), [ext.to_cpp() for ext in self.extensions])
+    def to_cpp(self) -> cTT_Opcode: return cTT_Opcode(self.alias.to_cpp(), self.value.to_cpp(), ExtVector([ext.to_cpp() for ext in self.extensions]))
     @staticmethod
     def tt(): return 'Opcode'
 class TT_List:
@@ -859,7 +871,7 @@ class TT_List:
             for e in self.extensions:
                 res += " " + e.eval_str()
         return res
-    def to_cpp(self) -> cTT_List: return cTT_List([p.to_cpp() for p in self.value], [ext.to_cpp() for ext in self.extensions])
+    def to_cpp(self) -> cTT_List: return cTT_List(ParamVector([p.to_cpp() for p in self.value]), ExtVector([ext.to_cpp() for ext in self.extensions]))
     @staticmethod
     def tt(): return 'list'
 class TT_Accessor:
@@ -924,7 +936,7 @@ class TT_Param:
         self.ops = []
         if tt_term.alias:
             # self.access_func = None
-            self.alias = TT_Alias(class_name, tt_term.alias)
+            self.alias = TT_Alias(class_name, tt_term.alias, tt_term.is_at_alias)
             self.operand_index.append(tt_term.alias)
 
             if tt_term.tt == TT_Reg.tt():
@@ -1047,7 +1059,7 @@ class TT_Param:
                                 for f in funcs: f.set_for_addr()
                                 
                 # this is new
-                self.alias = TT_Alias(class_name, s_access_func.value)
+                self.alias = TT_Alias(class_name, s_access_func.value, tt_term.is_at_alias)
                 self.attr = s_access_func.attr
                 self.has_attr_star = access_func.has_star
                 self.extensions = s_access_func.extensions
@@ -1139,7 +1151,7 @@ class TT_Param:
         # if tt_term.is_at_alias:
         #     raise Exception("TT_Param {0} for class {1} has @ alias for function".format(str(tt_term), class_name))
         
-        return TT_Func(class_name, tt_term.val, tt_term.alias, arg_default, options, tt_term.has_star)
+        return TT_Func(class_name, tt_term.val, TT_Alias(class_name, tt_term.alias, tt_term.is_at_alias), arg_default, options, tt_term.has_star)
         
     def __str__(self):
         res = ""
@@ -1148,8 +1160,8 @@ class TT_Param:
             if i.has_func(): continue
             res += "[" + str(i) + "]"
         res += str(self.value)
-        if self.is_at_alias: res += '@'
-        res += ":" + str(self.alias)
+        # if self.is_at_alias: res += '@'
+        # res += ":" + str(self.alias)
         for ind, a in enumerate(self.attr):
             res += str(a)
             if self.has_attr_star and ind < len(self.attr)-1: res += '*'
@@ -1163,9 +1175,9 @@ class TT_Param:
     def space_size(self): raise Exception(sp.CONST__ERROR_ILLEGAL)
     def to_cpp(self) -> cTT_AttrParam|cTT_Param:
         if self.attr:
-            return cTT_AttrParam(self.alias.to_cpp(), [o.to_cpp() for o in self.ops], self.value.to_cpp(), [a.to_cpp() for a in self.attr], [ext.to_cpp() for ext in self.extensions], self.is_at_alias, self.has_attr_star)
+            return cTT_AttrParam(OpsVector([o.to_cpp() for o in self.ops]), self.value.to_cpp(), ListVector([a.to_cpp() for a in self.attr]), ExtVector([ext.to_cpp() for ext in self.extensions]), self.has_attr_star)
         else:
-            return cTT_Param(self.alias.to_cpp(), [o.to_cpp() for o in self.ops], self.value.to_cpp(), [ext.to_cpp() for ext in self.extensions], self.is_at_alias, self.has_attr_star)
+            return cTT_Param(OpsVector([o.to_cpp() for o in self.ops]), self.value.to_cpp(), ExtVector([ext.to_cpp() for ext in self.extensions]))
     @staticmethod
     def tt(): return 'param'
 class TT_Cash:
@@ -1252,6 +1264,6 @@ class TT_Cash:
             res += i.eval_str() + " "
         res += '} )$'
         return res
-    def to_cpp(self) -> cTT_Cash: return cTT_Cash([v.to_cpp() for v in self.values], self.added_later)
+    def to_cpp(self) -> cTT_Cash: return cTT_Cash(CashComponentsVector([v.to_cpp() for v in self.values]), self.added_later)
     @staticmethod
     def tt(): return '$'

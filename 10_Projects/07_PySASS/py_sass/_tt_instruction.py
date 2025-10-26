@@ -8,6 +8,7 @@ from py_sass_ext import TT_AttrParam as cTT_AttrParam
 from py_sass_ext import TT_Param as cTT_Param
 from py_sass_ext import TT_Opcode as cTT_Opcode
 from py_sass_ext import TT_Cash as cTT_Cash
+from py_sass_ext import OperandVector, CashVector
 from . import _config as sp
 from ._tt_term import TT_Term
 from ._tt_terms import TT_Pred, TT_Opcode, TT_Param, TT_List, TT_Reg, TT_ICode
@@ -262,7 +263,7 @@ class TT_Instruction:
         regs = [r.to_cpp() for r in self.regs]
         cashs = [c.to_cpp() for c in self.cashs]
 
-        instr = cTT_Instruction(self.class_name, pred, opcode, regs, cashs)
+        instr = cTT_Instruction(self.class_name, pred, opcode, OperandVector(regs), CashVector(cashs))
 
         str_old = str(self)
         str_new = str(instr)

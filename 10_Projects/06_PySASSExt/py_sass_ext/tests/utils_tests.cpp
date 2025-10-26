@@ -314,6 +314,61 @@ int main(int argc, char** argv) {
         auto xb = SASS::Pickle::dumps(tt_instruction.get_state());
         SASS::TT_Instruction_State xs = SASS::Pickle::loads<SASS::TT_Instruction_State>(xb);
         std::cout << tt_instruction.__str__() << std::endl;
+        auto evals = tt_instruction.eval();
+
+        {
+            SASS::TT_Instruction* reca = reinterpret_cast<SASS::TT_Instruction*>(new uint8_t[sizeof(SASS::TT_Instruction)]);
+            SASS::TT_Instruction::unpack(*reca, xb, std::make_index_sequence<SASS::tt_instruction_state_size>{});
+            bool comp = (tt_instruction == *reca);
+            assert(comp == true);
+            delete reca;
+        }
+    }
+    {
+        auto alias = SASS::TT_Alias("hello", false);
+        auto reg = SASS::TT_Reg("Register", x6, x);
+        auto func = SASS::TT_Func("SImm", {"SImm", "UImm", "F64Imm"}, func_arg, false, false, x);
+        auto ext1 = SASS::TT_Ext(reg);
+        auto ext2 = SASS::TT_Ext(reg);
+        auto param1 = SASS::TT_Param({SASS::TT_OpAtAbs("Pg")}, reg, {ext1});
+        auto param2 = SASS::TT_Param({SASS::TT_OpAtNegate("Pg")}, func, {ext2});
+        auto param3 = SASS::TT_Param({SASS::TT_OpAtNot("pp")}, reg, {ext1});
+
+        auto ops_vec = SASS::TOpsVec{ SASS::TT_OpAtNot("lol"), SASS::TT_OpAtAbs("lol"), SASS::TT_OpAtInvert("lol") };
+        auto params1 = SASS::TParamVec {param1, param2};
+        auto params2 = SASS::TParamVec {param3};
+        auto list1 = SASS::TT_List(params1, SASS::TExtVec{ ext1 });
+        auto list2 = SASS::TT_List(params2, SASS::TExtVec{ ext2 });
+        auto attr_param = SASS::TT_AttrParam(ops_vec, reg, {list1, list2}, { ext1, ext2 }, false);
+
+        auto regular_param = SASS::TT_Param({SASS::TT_OpAtAbs("Pg")}, reg, {ext1});
+
+        auto pred = SASS::TT_NoPred();
+
+        auto opcode = SASS::TT_Opcode(alias, SASS::TT_ICode("010101", {0,1,2,3,4,5}, {010101}), {ext1, ext2});
+
+        auto cash_param1 = SASS::TT_Param({}, SASS::TT_Reg("REQ", SASS::TT_Default(-1, false, {}), SASS::TT_Alias("req", false)), {});
+        auto cash_param2 = SASS::TT_Param(
+            {}, 
+            SASS::TT_Func(
+                "BITSET", 
+                {"BITSET"}, 
+                SASS::TT_FuncArg(5, false, false, 5, false, 0, false, 0),
+                false, false,
+                SASS::TT_Alias("req_sb_bitset", false)
+            ),
+            {});
+        auto cash_param3 = SASS::TT_Param({}, SASS::TT_Reg("USCHED_INFO", SASS::TT_Default(-1, false, {}), SASS::TT_Alias("usched_info", false)), {});
+
+        auto cash1 = SASS::TT_Cash({SASS::TT_OpCashAnd(), cash_param1, SASS::TT_OpCashAssign(), cash_param2});
+        auto cash2 = SASS::TT_Cash({SASS::TT_OpCashQuestion(), cash_param3});
+
+        auto tt_instruction = SASS::TT_Instruction("classeli", pred, opcode, {attr_param, list1, regular_param}, {cash1, cash2});
+
+        auto xb = SASS::Pickle::dumps(tt_instruction.get_state());
+        SASS::TT_Instruction_State xs = SASS::Pickle::loads<SASS::TT_Instruction_State>(xb);
+        std::cout << tt_instruction.__str__() << std::endl;
+        auto evals = tt_instruction.eval();
 
         {
             SASS::TT_Instruction* reca = reinterpret_cast<SASS::TT_Instruction*>(new uint8_t[sizeof(SASS::TT_Instruction)]);

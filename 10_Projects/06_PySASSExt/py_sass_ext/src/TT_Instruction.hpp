@@ -48,9 +48,49 @@ namespace SASS {
         static TEvalDict get_eval(const TT_Instruction& instr) {
             TEvalDict res;
             res.insert(instr._pred.eval().begin(), instr._pred.eval().end());
-            res.insert(instr._opcode.eval().begin(), instr._opcode.eval().end());
+            std::set<std::string> used_regs;
+            const auto& oov = instr._opcode.eval();
+            for(const auto& v : oov) {
+              if(res.find(v.first) != res.end()) {
+                res.erase(v.first);
+                used_regs.insert(v.first);
+              }
+              else if(used_regs.find(v.first) == used_regs.end()) {
+                res.insert(v);
+              }
+            }
+            // res.insert(instr._opcode.eval().begin(), instr._opcode.eval().end());
+
+            // The goal for self.eval is key-uniqueness. This is always the case if we use aliases. For register names, though, it's not.
+            // More often that it's nice, extension registers use the register name in the encoding stage instead of their alias. Since
+            // encoding requires uniqueness of whatever identifier is used (register name or alias), if we find that self.value.value
+            // (that is the register name) is alreay in self.eval, we remove it. Otherwise we add it. All of this only for extension registers.
+            // For example:
+            //   CLASS "FFMA"
+            //     FORMAT PREDICATE @[!]Predicate(PT):Pg Opcode /FMZ(noFTZ):fmz /Round1(RN):rnd /SAT(noSAT):sat
+            //              $( RegisterFAU:Rd /optCC(noCC):writeCC )$
+            //              ',' $( [-] RegisterFAU:Ra {/REUSE(noreuse):reuse_src_a} )$
+            //              ',' $( [-] RegisterFAU:Rb {/REUSE(noreuse):reuse_src_b} )$
+            //              ',' $( [-] RegisterFAU:Rc {/REUSE(noreuse):reuse_src_c} )$
+            // has REUSE appearing 3 times. REUSE is a register, appearing with three separate aliases. In this case we don't add REUSE
+            // to self.eval becase the next one would overwrite the entry and at the end we may not know which one is in there of the three.
+            // Luckily there is no case where this has been an issue so far.
+            //   The instruction also has SAT as extension register for the opcode (/SAT(noSAT):sat). In this case, in the encoding stage,
+            // it may be that SAT is used instead of sat because it doesn't appear anywhere else in the instruction. In this case we keep it.
             for(const auto& a : instr._regs){
-                std::visit([&](const auto& val) {res.insert(val.eval().begin(), val.eval().end());}, a);
+                std::visit([&](const auto& val) {
+                  const auto& vv = val.eval();
+                  for(const auto& v : vv){
+                    if(res.find(v.first) != res.end()) {
+                      res.erase(v.first);
+                      used_regs.insert(v.first);
+                    }
+                    else if(used_regs.find(v.first) == used_regs.end()) {
+                      res.insert(v);
+                    }
+                  }
+                  // res.insert(val.eval().begin(), val.eval().end());
+                }, a);
             }
             for(const auto& a: instr._cashs){
               res.insert(a.eval().begin(), a.eval().end());

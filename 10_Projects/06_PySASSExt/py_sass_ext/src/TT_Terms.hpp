@@ -76,11 +76,11 @@ namespace SASS {
         bool _is_at_alias;
     public:
         TT_Alias(const std::string& alias_name, bool is_at_alias) noexcept : _TT_Base(alias_name), _is_at_alias(is_at_alias) {}
-        TT_Alias(const TT_Alias& other) noexcept : _TT_Base(other) {}
-        TT_Alias(TT_Alias&& other) noexcept : _TT_Base(other) {}
-        TT_Alias& operator=(const TT_Alias& other) noexcept { if(this == &other) return *this; _TT_Base::operator=(other); return *this; }
-        TT_Alias& operator=(TT_Alias&& other) noexcept { if(this == &other) return *this; _TT_Base::operator=(other); return *this; }
-        bool operator==(const TT_Alias& other) const noexcept { if(this == &other) return true; return (_TT_Base::operator==(other)); }
+        TT_Alias(const TT_Alias& other) noexcept : _TT_Base(other), _is_at_alias(other._is_at_alias) {}
+        TT_Alias(TT_Alias&& other) noexcept : _TT_Base(other), _is_at_alias(std::move(other._is_at_alias)) {}
+        TT_Alias& operator=(const TT_Alias& other) noexcept { if(this == &other) return *this; _TT_Base::operator=(other); _is_at_alias = other._is_at_alias; return *this; }
+        TT_Alias& operator=(TT_Alias&& other) noexcept { if(this == &other) return *this; _TT_Base::operator=(other); _is_at_alias = std::move(other._is_at_alias); return *this; }
+        bool operator==(const TT_Alias& other) const noexcept { if(this == &other) return true; return (_TT_Base::operator==(other)) && (_is_at_alias == other._is_at_alias); }
         virtual std::string alias() const noexcept { return std::get<std::string>(value()); };
         const TT_Alias_State get_state(TT_Alias* selfp=nullptr) const override { return std::make_tuple(alias(), _is_at_alias); }
         bool is_at_alias() const noexcept { return _is_at_alias; }
@@ -296,9 +296,8 @@ namespace SASS {
         TT_Func& operator=(TT_Func&& other) noexcept { if(this == &other) return *this; _TT_Assemblable::operator=(other); _options = std::move(other._options); _arg_default = std::move(other._arg_default); _star = std::move(other._star); _is_address = std::move(other._is_address); _alias = std::move(other._alias); _func = std::move(other._func); return *this; }
         bool operator==(const TT_Func& other) const noexcept { if(this == &other) return true; return _TT_Assemblable::operator==(other) && (_options == other._options) && (_arg_default == other._arg_default) && (_star == other._star) && (_is_address == other._is_address) && (_alias == other._alias) && (_func == other._func); }
         std::string __str__() const override { 
-            // NOTE: we have the alias here, but we don't print it. Printing the alias is a thing of TT_Param
             std::stringstream ss;
-            ss << std::get<std::string>(value()) << "(" << _arg_default.__str__() << ")" << (_star ? "*" : "") << ":" << _alias.alias();
+            ss << std::get<std::string>(value()) << "(" << _arg_default.__str__() << ")" << (_alias.is_at_alias() ? "@" : "") << (_star ? "*" : "") << ":" << _alias.alias();
             return ss.str();
         }
         static std::unordered_map<std::string, TT_Func> get_eval(const TT_Func& func) {
@@ -364,14 +363,15 @@ namespace SASS {
             std::stringstream res;
             res << std::get<std::string>(value());
             if(_default.exists()) res << "(" << _default.__str__() << ")";
+            if(_alias.is_at_alias()) res << "@";
             res << ":" << _alias.alias();
             // NOTE: we have the alias here, but we don't print it. Printing the alias is a thing of TT_Param
             return res.str();
         }
         static std::unordered_map<std::string, TT_Reg> get_eval(const TT_Reg& reg) {
             std::unordered_map<std::string, TT_Reg> res = {{reg.alias().__str__(), reg}};
-            // if(std::holds_alternative<int>(reg.value())) res.insert({std::to_string(std::get<int>(reg.value())), reg});
-            // else res.insert({std::get<std::string>(reg.value()), reg});
+            if(std::holds_alternative<int>(reg.value())) res.insert({std::to_string(std::get<int>(reg.value())), reg});
+            else res.insert({std::get<std::string>(reg.value()), reg});
             return res;
         }
         TDomain get_domain(const TToLimit& to_limit = {}, bool filter_invalid = false) const override {
@@ -467,41 +467,48 @@ namespace SASS {
     // = Following are the actual instruction components ================================================================
     // ==================================================================================================================
 
-    using TT_Pred_State_0 = std::tuple<TT_Reg_State, TT_AtOp_State>;
+    using TT_Pred_State_0 = std::tuple<TT_Reg_State, TT_AtOp_State, bool>;
     using TT_Pred_State = std::variant<TT_Pred_State_0>;
     constexpr size_t tt_pred_state_size = std::tuple_size<TT_Pred_State_0>::value;
     class TT_Pred : public _TT_WithAlias, public _TT_QueriableAlias, public _TT_IsPrintable, public Picklable<TT_Pred, TT_Pred_State, tt_pred_state_size> {
         TT_Reg _reg;
         TT_OpAtNot _op;
+        bool _is_none;
         TT_Eval _eval;
+
+        static TEvalDict get_eval(const TT_Reg& reg, const TT_OpAtNot& op, bool is_none) {
+            if(!is_none) return {{reg.alias().alias(), reg}, {op.alias().alias(), op}};
+            else return {};
+        }
     public:
-        TT_Pred(const TT_Reg& reg, const TT_OpAtNot& op) noexcept
-          : _reg(reg), _op(op), _eval({{_reg.alias().alias(), _reg}, {_op.alias().alias(), _op}}) {}
-        TT_Pred(const TT_Reg_State& reg, const TT_AtOp_State& op) noexcept
-          : _reg(TT_Reg::muh(reg)), _op(TT_OpAtNot::muh(op)), _eval({{_reg.alias().alias(), _reg}, {_op.alias().alias(), _op}}) {}
+        TT_Pred(const TT_Reg& reg, const TT_OpAtNot& op, bool is_none=false) noexcept
+          : _reg(reg), _op(op), _is_none(is_none), _eval(TT_Pred::get_eval(_reg, _op, _is_none)) {}
+        TT_Pred(const TT_Reg_State& reg, const TT_AtOp_State& op, bool is_none) noexcept
+          : _reg(TT_Reg::muh(reg)), _op(TT_OpAtNot::muh(op)), _is_none(is_none), _eval(TT_Pred::get_eval(_reg, _op, _is_none)) {}
         TT_Pred(const TT_Pred& other) noexcept
-          : _reg(other._reg), _op(other._op), _eval(other._eval) {}
+          : _reg(other._reg), _op(other._op), _is_none(other._is_none), _eval(other._eval) {}
         TT_Pred(TT_Pred&& other) noexcept
-          : _reg(std::move(other._reg)), _op(std::move(other._op)), _eval(std::move(other._eval)) {}
-        TT_Pred& operator=(const TT_Pred& other) noexcept { if(this == &other) return *this; _reg = other._reg; _op = other._op, _eval = other._eval; return *this; }
-        TT_Pred& operator=(TT_Pred&& other) noexcept { if(this == &other) return *this; _reg = std::move(other._reg); _op = std::move(other._op); _eval = std::move(other._eval); return *this; }
-        bool operator==(const TT_Pred& other) const noexcept { if(this == &other) return true; return (_reg == other._reg) && (_op == other._op); }
+          : _reg(std::move(other._reg)), _op(std::move(other._op)), _is_none(std::move(other._is_none)), _eval(std::move(other._eval)) {}
+        TT_Pred& operator=(const TT_Pred& other) noexcept { if(this == &other) return *this; _reg = other._reg; _op = other._op; _is_none = other._is_none; _eval = other._eval; return *this; }
+        TT_Pred& operator=(TT_Pred&& other) noexcept { if(this == &other) return *this; _reg = std::move(other._reg); _op = std::move(other._op); _is_none = std::move(other._is_none); _eval = std::move(other._eval); return *this; }
+        bool operator==(const TT_Pred& other) const noexcept { if(this == &other) return true; return (_reg == other._reg) && (_op == other._op) && (_is_none == other._is_none); }
         const TT_Reg& value() const noexcept { return _reg; }
         const TT_Reg& reg() const noexcept { return _reg; }
         const TT_OpAtNot& op() const noexcept { return _op; }
-        virtual bool is_none() const noexcept { return false; }
+        bool is_none() const noexcept { return _is_none; }
         const TEvalDict& eval() const noexcept { return _eval.eval(); }
         const TT_Alias& alias() const noexcept override { return _reg.alias(); }
 
         std::string __str__() const override { return std::string("@[") + _op.__str__() + "]" + _reg.__str__(); }
-        std::vector<std::string> get_enc_alias() const noexcept override { return { _op.alias().alias() }; }
-        const TT_Pred_State get_state(TT_Pred* selfp=nullptr) const override { return std::make_tuple(_reg.get_state(), _op.get_state()); }
+        std::vector<std::string> get_enc_alias() const noexcept override { return { _reg.alias().alias(), _op.alias().alias() }; }
+        const TT_Pred_State get_state(TT_Pred* selfp=nullptr) const override { return std::make_tuple(_reg.get_state(), _op.get_state(), _is_none); }
     };
 
     class TT_NoPred : public TT_Pred { 
     public: 
-        TT_NoPred() : TT_Pred(TT_Reg("none", TT_Default(-1, false, {}), TT_Alias("none", false)), TT_OpAtNot("none")) {} 
-        bool is_none() const noexcept override { return true; }
+        TT_NoPred() : TT_Pred(TT_Reg("none", TT_Default(-1, false, {}), TT_Alias("none", false)), TT_OpAtNot("none"), true) {} 
+        std::string __str__() const override { return ""; }
+        std::vector<std::string> get_enc_alias() const noexcept override { return { }; }
     };
 
     using TT_Ext_State_0 = std::tuple<TT_Reg_State>;
@@ -536,7 +543,7 @@ namespace SASS {
         const TT_Alias& alias() const noexcept override { return _reg.alias(); }
 
         std::string __str__() const override { return std::string("/") + _reg.__str__(); }
-        std::vector<std::string> get_enc_alias() const noexcept override { return { std::get<std::string>(_reg.value()) }; }
+        std::vector<std::string> get_enc_alias() const noexcept override { return { std::get<std::string>(_reg.value()), _reg.alias().alias() }; }
         const TT_Ext_State get_state(TT_Ext* selfp=nullptr) const override { return std::make_tuple(_reg.get_state()); }
     };
     using TExtVec = std::vector<TT_Ext>;
@@ -553,9 +560,19 @@ namespace SASS {
 
         static TEvalDict get_eval(const TT_Opcode& opcode) {
             TEvalDict res;
+            std::set<std::string> used_regs;
             for(const auto& e : opcode._extensions){
                 const auto& t = e.eval();
-                res.insert(t.begin(), t.end());
+                for(const auto& tt : t){
+                    if(res.find(tt.first) != res.end()){
+                        res.erase(tt.first);
+                        used_regs.insert(tt.first);
+                    }
+                    if(used_regs.find(tt.first) == used_regs.end()){
+                        res.insert(tt);
+                    }
+                }
+                // res.insert(t.begin(), t.end());
             }
             res.insert({opcode._alias.__str__(), opcode._icode});
             return res;
@@ -626,9 +643,19 @@ namespace SASS {
                 res.insert(temp.begin(), temp.end());
             }
             
+            std::set<std::string> used_regs;
             for(const auto& e : param._extensions){
                 const auto& t = e.eval();
-                res.insert(t.begin(), t.end());
+                for(const auto& tt : t){
+                    if(res.find(tt.first) != res.end()){
+                        res.erase(tt.first);
+                        used_regs.insert(tt.first);
+                    }
+                    if(used_regs.find(tt.first) == used_regs.end()){
+                        res.insert(tt);
+                    }
+                }
+                // res.insert(t.begin(), t.end());
             }
             for(const auto& e : param._ops){
                 res.insert({e.alias().alias(), e});
@@ -667,6 +694,8 @@ namespace SASS {
                 const auto& v = ext.get_enc_alias();
                 res.insert(res.end(), v.begin(), v.end());
             }
+            if(std::holds_alternative<TT_Reg>(_value)) res.push_back(std::get<TT_Reg>(_value).alias().alias());
+            else res.push_back(std::get<TT_Func>(_value).alias().alias());
             res.shrink_to_fit();
             return res;
         }

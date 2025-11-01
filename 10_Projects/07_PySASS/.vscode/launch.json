@@ -1,15 +1,3 @@
-{
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Python Debugger: Module",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "py_sass",
-            "python": "/home/lol/.venvs/standard13/bin/python3.13"
-        }
-    ]
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:d08db9bad656e5ebd0ef1604d7bc3567e377d0a241b9150fd5ba299e5ebe2294
+size 489

@@ -4,7 +4,7 @@ import itertools as itt
 from . import _config as sp
 from ._sass_expression_ops import Op_Constant, Op_ConstBankAddress2, Op_ConstBankAddress0
 from ._tt_instruction import TT_Instruction
-if not sp.SWITCH__USE_PROPS_EXT:
+if not sp.SWITCH__USE_TT_EXT:
     from ._tt_terms import TT_Opcode, TT_Param, TT_List, TT_Reg, TT_Ext
     from ._tt_terms import TT_Func
 else:
@@ -1262,7 +1262,8 @@ class SASS_Class_Props:
                 #  - registers with attributs: C:srcConst[UImm(5/0*):constBank]*[ZeroRegister(RZ):Ra+SImm(17)*:immConstOffset]
                 #  => in both instances RegisterFAU:Rd and C:srcConst are a [RegisterName]:[AliasName] pair
                 # reg_vals[str(i.alias)] = set(int(x) for x in i.value.get_domain({}))
-                # if (sp.SWITCH__USE_TT_EXT and isinstance(i, TT_AttrParam)) or (not sp.SWITCH__USE_TT_EXT):
+                # if (sp.SWITCH__USE_TT_EXT and isinstance(i, TT_AttrParam)):
+                #     pass
                 for attr_ind, attr in enumerate(i.attr):
                     # if we have an attribute, we have a memory access somewhere
                     self.__has_attr_arg = True

@@ -235,8 +235,6 @@ class Instr_EncDec_Gen:
         for m_ind,(class_count, bin_code, class_names) in enumerate(multiples):
             # unique_hashes = dict()
             for c_ind, class_name in enumerate(class_names):
-                if class_name == 'ALD':
-                    pass
                 print(100*" ",'\r', "Gen Lookup: SM{5}: [{0}/{1} | {2}/{3}] {4}".format(c_ind, class_count, m_ind, m_ind_tot , class_name, sm), end='\r')
                 identifier:dict = Instr_EncDec_Gen.__class_lookup_gen(classes_dict[class_name], details)
                 # If the instruction can't exist => skip

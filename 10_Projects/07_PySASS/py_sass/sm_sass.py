@@ -877,6 +877,7 @@ if __name__ == '__main__' or True:
     # sp.TEST__MOCK_INSTRUCTIONS = False
     sass = {}
     sms = [50, 52, 53, 60, 61, 62, 70, 72, 75, 80, 86, 90, 100, 120]
+    sms = [120]
     # sms = [86, 90, 100, 120]
     # sms = [50]
     # import time

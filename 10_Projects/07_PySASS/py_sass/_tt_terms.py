@@ -941,6 +941,9 @@ class TT_Param:
         elif not tt_term.access_func and not tt_term.alias:
             raise Exception("TT_Param {0} for class {1} has no alias".format(str(tt_term), class_name))                        
 
+        if class_name == 'cctl_c_ldcu_const_bindless_':
+            pass
+
         self.ops = []
         if tt_term.alias:
             # self.access_func = None

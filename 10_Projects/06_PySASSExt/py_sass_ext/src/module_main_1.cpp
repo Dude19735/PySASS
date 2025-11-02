@@ -72,6 +72,7 @@ NB_MODULE(_sass_values, m) {
     nb::bind_vector<SASS::TParamVec>(m, "ParamVector");
     nb::bind_map<SASS::TOptions>(m, "OptionsDict");
     nb::bind_map<SASS::TEvalDict>(m, "EvalDict");
+    nb::bind_map<SASS::TToLimit>(m, "ToLimit");
 
     nb::class_<SASS::SASS_Bits>(m, "SASS_Bits")
     .def(nb::init<const BitVector&, int, bool>(),
@@ -628,7 +629,7 @@ NB_MODULE(_sass_values, m) {
     .def_prop_ro("star", &SASS::TT_Func::star)
     .def_prop_ro("is_address", &SASS::TT_Func::is_address)
     .def_prop_ro("func", &SASS::TT_Func::func)
-    .def("get_domain", &SASS::TT_Func::get_domain, nb::arg("to_limit"), nb::arg("filter_invalid"))
+    .def("get_domain", &SASS::TT_Func::get_domain, nb::arg("to_limit"), nb::arg("filter_invalid")=false)
     .def("sass_from_bits", &SASS::TT_Func::sass_from_bits, nb::arg("bits"))
     .def("__str__", &SASS::TT_Func::__str__)
     .def("__getstate__", &SASS::TT_Func::__getstate__ )
@@ -640,7 +641,7 @@ NB_MODULE(_sass_values, m) {
     .def_prop_ro("value", &SASS::TT_Reg::value)
     .def_prop_ro("default", &SASS::TT_Reg::default_)
     .def_prop_ro("min_bit_len", &SASS::TT_Reg::min_bit_len)
-    .def("get_domain", &SASS::TT_Reg::get_domain, nb::arg("to_limit"), nb::arg("filter_invalid"))
+    .def("get_domain", &SASS::TT_Reg::get_domain, nb::arg("to_limit"), nb::arg("filter_invalid")=false)
     .def("sass_from_bits", &SASS::TT_Reg::sass_from_bits, nb::arg("bits"))
     .def("__str__", &SASS::TT_Reg::__str__)
     .def("__getstate__", &SASS::TT_Reg::__getstate__ )
@@ -706,6 +707,7 @@ NB_MODULE(_sass_values, m) {
     .def_prop_ro("extensions", &SASS::TT_Param::extensions)
     .def_prop_ro("eval", &SASS::TT_Param::eval)
     .def_prop_ro("attr", [&](SASS::TT_Param& self) { return SASS::TListVec{}; })
+    .def_prop_ro("is_at_alias", [&](SASS::TT_Param& self) { return self.is_at_alias(); })
     .def("get_enc_alias", &SASS::TT_Param::get_enc_alias)
     .def("__str__", &SASS::TT_Param::__str__)
     .def("__getstate__", &SASS::TT_Param::__getstate__ )
@@ -742,12 +744,17 @@ NB_MODULE(_sass_values, m) {
     nb::class_<SASS::TT_Instruction>(m, "TT_Instruction")
     .def(nb::init<std::string, SASS::TT_Pred, SASS::TT_Opcode, SASS::TOperandVec, SASS::TCashVec>(), nb::arg("class_name"), nb::arg("pred"), nb::arg("opcode"), nb::arg("regs"), nb::arg("cashs"))
     .def_prop_ro("class_name", &SASS::TT_Instruction::class_name)
-    .def_prop_ro("pred", &SASS::TT_Instruction::pred)
+    .def_prop_ro("pred", [&](const SASS::TT_Instruction& self){ if(self.pred().is_none()) { return nb::none(); } return nb::cast(self.pred()); })
     .def_prop_ro("opcode", &SASS::TT_Instruction::opcode)
     .def_prop_ro("regs", &SASS::TT_Instruction::regs)
     .def_prop_ro("cashs", &SASS::TT_Instruction::cashs)
     .def_prop_ro("eval", &SASS::TT_Instruction::eval)
+    .def("get_opcode_bin", [&](const SASS::TT_Instruction& self){ 
+        IntVector res = self.opcode().get_opcode_bin();
+        if(res.size() == 0) throw std::runtime_error("Nothing in opcode bin code. In this place, this is a bug!");
+        return nb::tuple(nb::cast(res));
+    })
     .def("__str__", &SASS::TT_Instruction::__str__)
-    .def("__getstate__", &SASS::TT_Cash::__getstate__ )
-    .def("__setstate__", &SASS::TT_Cash::__setstate__ );
+    .def("__getstate__", &SASS::TT_Instruction::__getstate__ )
+    .def("__setstate__", &SASS::TT_Instruction::__setstate__ );
 }

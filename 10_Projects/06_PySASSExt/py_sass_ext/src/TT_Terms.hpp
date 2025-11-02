@@ -422,7 +422,7 @@ namespace SASS {
         const IntVector& bin_ind() const noexcept { return _bin_ind; }
         const IntVector& bin_tup() const noexcept { return _bin_tup; }
         
-        IntVector get_opcode_bin() const noexcept { return _bin_tup; }
+        const IntVector& get_opcode_bin() const noexcept { return _bin_tup; }
         const TT_ICode_State get_state(TT_ICode* selfp=nullptr) const override { return std::make_tuple(_bin_str, _bin_ind, _bin_tup); }
     };
 
@@ -595,7 +595,7 @@ namespace SASS {
         const TEvalDict& eval() const noexcept { return _eval.eval(); }
         const TT_ICode& icode() const noexcept { return _icode; }
         const TExtVec& extensions() const noexcept { return _extensions; }
-
+        const IntVector& get_opcode_bin() const noexcept { return _icode.get_opcode_bin(); }
         
         std::string __str__() const override {
             std::stringstream res;
@@ -683,6 +683,7 @@ namespace SASS {
         const TOpsVec& ops() const noexcept { return _ops; }
         const TExtVec& extensions() const noexcept { return _extensions; }
         const TEvalDict& eval() const noexcept { return _eval.eval(); }
+        const bool is_at_alias() const noexcept { return (std::holds_alternative<TT_Reg>(_value) ? std::get<TT_Reg>(_value).alias().is_at_alias() : std::get<TT_Func>(_value).alias().is_at_alias()); }
 
         std::vector<std::string> get_enc_alias() const noexcept override {
             std::vector<std::string> res = {};

@@ -140,6 +140,6 @@ namespace SASS {
         const TOperandVec& regs() const noexcept { return _regs; }
         const TCashVec& cashs() const noexcept { return _cashs; }
         const TEvalDict& eval() const noexcept { return _eval.eval(); }
-        
+        const IntVector& get_opcode_bin() const noexcept { return _opcode.get_opcode_bin(); }
     };
 }

@@ -13,7 +13,7 @@ from py_sass_ext import BitVector
 from ._sass_expression_utils import Op_ParamSplit, Op_Base, Op_Function, Op_UnaryOperator
 from ._sass_expression_utils import Op_Operand, Op_DualOperator, Op_Control, Op_AtOperand
 from ._tt_terms import TT_ICode, TT_Reg, TT_Func
-if not sp.SWITCH__USE_OP_EXT:
+if not sp.SWITCH__USE_TT_EXT:
     from ._tt_terms import TT_ICode, TT_Reg, TT_Func
 else:
     from py_sass_ext import TT_ICode, TT_Reg, TT_Func

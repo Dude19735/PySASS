@@ -175,10 +175,14 @@ class SASS_Class:
         # format_tt2:cTT_Instruction
         # format_tt2 = format_tt.to_cpp()
         # print(self.class_name, "...................")
-        cformat_tt:cTT_Instruction = format_tt.to_cpp()
         # print("...................", "ok")
         # self.FORMAT = format_tt2
-
+        if sp.SWITCH__USE_TT_EXT:
+            self.__finalize_init(class_name, format_tt.to_cpp(), details)
+        else:
+            self.__finalize_init(class_name, format_tt, details)
+    
+    def __finalize_init(self, class_name, format_tt, details):
         # finalize the conditions: replace all remaining Op_Value with other stuff
         cond_types = details.ARCHITECTURE.CONDITION['TYPES'] # type: ignore
         for x in self.CONDITIONS:
@@ -259,6 +263,9 @@ class SASS_Class:
             self.OPCODES['opcode']['i'], self.OPCODES['set'],
             self.PROPERTIES, self.PREDICATES, self.ENCODING, self.IS_ALTERNATE,
             self.details)
+        
+        # If we use py_sass_ext, we have to reassign the FORMAT to the cpp format here...
+        self.FORMAT = format_tt
         
     def __iter__(self):
         self.__iter = iter([i for i in dir(self) if not i.startswith('_') and i[0].isupper()])

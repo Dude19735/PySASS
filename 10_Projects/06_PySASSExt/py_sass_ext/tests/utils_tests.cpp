@@ -365,6 +365,8 @@ int main(int argc, char** argv) {
 
         auto tt_instruction = SASS::TT_Instruction("classeli", pred, opcode, {attr_param, list1, regular_param}, {cash1, cash2});
 
+        std::string lol = tt_instruction.to_other_kind_of_string("010101");
+
         auto xb = SASS::Pickle::dumps(tt_instruction.get_state());
         SASS::TT_Instruction_State xs = SASS::Pickle::loads<SASS::TT_Instruction_State>(xb);
         std::cout << tt_instruction.__str__() << std::endl;

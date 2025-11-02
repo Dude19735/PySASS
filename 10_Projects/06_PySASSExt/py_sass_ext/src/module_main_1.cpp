@@ -754,6 +754,7 @@ NB_MODULE(_sass_values, m) {
         if(res.size() == 0) throw std::runtime_error("Nothing in opcode bin code. In this place, this is a bug!");
         return nb::tuple(nb::cast(res));
     })
+    .def("to_other_kind_of_string", &SASS::TT_Instruction::to_other_kind_of_string, nb::arg("opcode"))
     .def("__str__", &SASS::TT_Instruction::__str__)
     .def("__getstate__", &SASS::TT_Instruction::__getstate__ )
     .def("__setstate__", &SASS::TT_Instruction::__setstate__ );

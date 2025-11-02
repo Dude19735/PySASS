@@ -134,6 +134,51 @@ namespace SASS {
             return res.str();
         }
 
+        /*
+        This method outputs some fitting format for the search db. This is not the same as in the instructions.txt files
+        */
+        const std::string to_other_kind_of_string(const std::string& opcode) const {
+          std::stringstream val;
+          val << "FORMAT";
+          if(!_pred.is_none()){
+            val << " PREDICATE " << _pred.__str__();
+          }
+          // if self.pred:
+          //     val[-1] += ' PREDICATE ' + str(self.pred)
+          std::string opp = _opcode.__str__();
+          auto itt = opp.find("Opcode");
+          if(itt == std::string::npos) {
+            throw std::runtime_error("We must be able to find 'Opcode'. Otherwise it's a bug!");
+          }
+          opp.replace(itt, itt+6, opcode);
+          val << " " << opp << std::endl;
+
+          // val[-1] += " " + str(self.opcode).replace('Opcode', opcode)
+
+          size_t s = _regs.size();
+          for(size_t i=0; i<s; ++i){
+              if(i > 0) val << "   ,";
+              else val << "    ";
+              val << std::visit([&](const auto& r) { return r.__str__(); }, _regs.at(i)) << std::endl;
+          }
+          s = _cashs.size();
+          for(size_t i=0; i<s; ++i){
+              val << _cashs.at(i).__str__();
+              if(i < s-1) val << std::endl;
+          }
+          
+          return val.str();
+          // if self.regs:
+          //     for n,i in enumerate(self.regs):
+          //         if n > 0: s = "   ,"
+          //         else: s = "    "
+          //         val.append(s + str(i))
+          // for i in self.cashs:
+          //     val.append(str(i))
+
+          // return "\n".join(val)
+        }
+
         std::string class_name() const noexcept { return _class_name; }
         const TT_Pred& pred() const noexcept { return _pred; }
         const TT_Opcode& opcode() const noexcept { return _opcode; }

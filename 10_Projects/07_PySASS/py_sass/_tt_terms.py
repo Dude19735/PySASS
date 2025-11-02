@@ -941,8 +941,8 @@ class TT_Param:
         elif not tt_term.access_func and not tt_term.alias:
             raise Exception("TT_Param {0} for class {1} has no alias".format(str(tt_term), class_name))                        
 
-        if class_name == 'cctl_c_ldcu_const_bindless_':
-            pass
+        # if class_name == 'cctl_c_ldcu_const_bindless_':
+        #     pass
 
         self.ops = []
         if tt_term.alias:
@@ -1088,12 +1088,25 @@ class TT_Param:
                     
                 self.eval_alias[self.alias.value] = self
                 self.operand_index.append(self.alias.value)
+                used_regs = set()
                 for a in self.attr:
-                    self.eval.update(a.eval)
+                    for k,v in a.eval.items():
+                        if k in self.eval:
+                            del self.eval[k]
+                            used_regs.add(k)
+                        elif k not in used_regs:
+                            self.eval[k] = v
+                    # self.eval.update(a.eval)
                     self.eval_alias.update(a.eval_alias)
                     self.operand_index.extend(a.operand_index)
                 for e in self.extensions:
-                    self.eval.update(e.eval)
+                    for k,v in e.eval.items():
+                        if k in self.eval:
+                            del self.eval[k]
+                            used_regs.add(k)
+                        elif k not in used_regs:
+                            self.eval[k] = v
+                    # self.eval.update(e.eval)
                     self.eval_alias.update(e.eval_alias)
                     self.operand_index.extend(e.operand_index)
                 for op in self.ops:

@@ -837,9 +837,25 @@ namespace SASS {
 
         static TEvalDict get_eval(const TT_AttrParam& param, const TEvalDict& param_eval) {
             TEvalDict res = param_eval;
-            for(const auto& a : param._attr){
-                res.insert(a.eval().begin(), a.eval().end());
+            // for(const auto& a : param._attr){
+            //     res.insert(a.eval().begin(), a.eval().end());
+            // }
+
+            std::set<std::string> used_regs;
+            for(const auto& e : param._attr){
+                const auto& t = e.eval();
+                for(const auto& tt : t){
+                    if(res.find(tt.first) != res.end()){
+                        res.erase(tt.first);
+                        used_regs.insert(tt.first);
+                    }
+                    if(used_regs.find(tt.first) == used_regs.end()){
+                        res.insert(tt);
+                    }
+                }
+                // res.insert(t.begin(), t.end());
             }
+
             return res;
         }
     public:

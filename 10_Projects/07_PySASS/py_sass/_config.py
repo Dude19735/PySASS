@@ -37,6 +37,8 @@ while there are tokens on the operator stack:
     pop the operator from the operator stack onto the output queue
 """
 
+if not 'OPERATION_TYPES' in locals(): OPERATION_TYPES=set()
+
 if not 'CONST__OP_COLOR' in locals(): CONST__OP_COLOR='light_grey'
 if not 'CONST__OP_ATTRS' in locals(): CONST__OP_ATTRS=[]
 if not 'CONST__OPCODE_COLOR' in locals(): CONST__OPCODE_COLOR='red'
@@ -201,7 +203,7 @@ if not 'CACHE__SM' in locals(): CACHE__SM = {}
 
 if not 'SWITCH__USE_TT_EXT' in locals(): SWITCH__USE_TT_EXT = True
 if not 'SWITCH__USE_OP_EXT' in locals(): SWITCH__USE_OP_EXT = False
-if not 'SWITCH__USE_PROPS_EXT' in locals(): SWITCH__USE_PROPS_EXT = False
+# if not 'SWITCH__USE_PROPS_EXT' in locals(): SWITCH__USE_PROPS_EXT = False
 
 if not 'SM_LATENCY__ORDERED_ZERO' in locals(): SM_LATENCY__ORDERED_ZERO = "ORDERED_ZERO"
 if not 'SM_LATENCY__ORDERED_ZERO_VAL' in locals(): SM_LATENCY__ORDERED_ZERO_VAL = 0

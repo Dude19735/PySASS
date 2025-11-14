@@ -35,27 +35,32 @@ class Op_AtNot(Op_AtOperand):
     """This one corresponds to @not (not the logical '!')"""
     A=sp.EXPR_OP_ASSOCIATIV_GROUP_OPERAND
     P=sp.EXPR_OP_PRECEDENCE_NR_OPERAND
-    def __init__(self, name:str, term): super().__init__(name, term, 'TT_OpAtNot', '@not')
+    def __init__(self, name:str, term): 
+        super().__init__(name, term, 'TT_OpAtNot', '@not')
 class Op_AtNegate(Op_AtOperand):
     """This one corresponds to @negate (not the unary '-')"""
     A=sp.EXPR_OP_ASSOCIATIV_GROUP_OPERAND
     P=sp.EXPR_OP_PRECEDENCE_NR_OPERAND
-    def __init__(self, name:str, term): super().__init__(name, term, 'TT_OpAtNegate', '@negate')
+    def __init__(self, name:str, term): 
+        super().__init__(name, term, 'TT_OpAtNegate', '@negate')
 class Op_AtAbs(Op_AtOperand):
     """This one corresponds to @absolute which is the [||] in front of some instructions"""
     A=sp.EXPR_OP_ASSOCIATIV_GROUP_OPERAND
     P=sp.EXPR_OP_PRECEDENCE_NR_OPERAND
-    def __init__(self, name:str, term): super().__init__(name, term, 'TT_OpAtAbs', '@absolute')
+    def __init__(self, name:str, term): 
+        super().__init__(name, term, 'TT_OpAtAbs', '@absolute')
 class Op_AtSign(Op_AtOperand):
     """This one corresponds to @sign"""
     A=sp.EXPR_OP_ASSOCIATIV_GROUP_OPERAND
     P=sp.EXPR_OP_PRECEDENCE_NR_OPERAND
-    def __init__(self, name:str, term): super().__init__(name, term, 'TT_OpAtSign', '@sign')
+    def __init__(self, name:str, term): 
+        super().__init__(name, term, 'TT_OpAtSign', '@sign')
 class Op_AtInvert(Op_AtOperand):
     """This one corresponds to @invert that corresponds to the [~] that is sometimes present in front of instructions"""
     A=sp.EXPR_OP_ASSOCIATIV_GROUP_OPERAND
     P=sp.EXPR_OP_PRECEDENCE_NR_OPERAND
-    def __init__(self, name:str, term): super().__init__(name, term, 'TT_OpAtInvert', '@invert')
+    def __init__(self, name:str, term): 
+        super().__init__(name, term, 'TT_OpAtInvert', '@invert')
 #######################################################################################################################################
 #######################################################################################################################################
 #######################################################################################################################################

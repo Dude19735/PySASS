@@ -248,6 +248,9 @@ class TT_Instruction:
         self.eval_alias.update(self.opcode.eval_alias)
         self.operand_index.extend(self.opcode.operand_index)
         
+        if self.class_name == 'cctl_c_ldcu_const_bindless_':
+            pass
+
         if self.regs:
             regs = []
             for r in self.regs:
@@ -296,6 +299,9 @@ class TT_Instruction:
 
         instr = cTT_Instruction(self.class_name, pred, opcode, OperandVector(regs), CashVector(cashs))
 
+        # if self.class_name == 'cctl_c_ldcu_const_bindless_':
+        #     pass
+
         str_old = str(self)
         str_new = str(instr)
         if not (str_old == str_new): 
@@ -333,6 +339,12 @@ class TT_Instruction:
         cashs_old_enc_vals = [sorted(i.get_enc_alias()) for i in self.cashs]
         cashs_new_enc_vals = [sorted(i.get_enc_alias()) for i in instr.cashs]
         if not (all(i==j for i,j in zip(cashs_old_enc_vals, cashs_new_enc_vals))): 
+            print("Trouble with {0}".format(tc.colored("[{0}]".format(self.class_name), 'red')))
+            raise Exception(sp.CONST__ERROR_UNEXPECTED)
+        
+        old_print:str = self.to_other_kind_of_string("".join(str(i) for i in self.get_opcode_bin()))
+        new_print:str = instr.to_other_kind_of_string("".join(str(i) for i in instr.get_opcode_bin()))
+        if not (old_print == new_print):
             print("Trouble with {0}".format(tc.colored("[{0}]".format(self.class_name), 'red')))
             raise Exception(sp.CONST__ERROR_UNEXPECTED)
 

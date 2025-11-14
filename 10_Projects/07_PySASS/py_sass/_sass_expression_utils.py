@@ -83,6 +83,9 @@ class Op_Operand(Op_Base):
         super().__init__(op_f, name, None)
         self.__VALUE:object
         self.__VALUE = su.try_convert(value, convert_bin=True, convert_hex=True, convert_split_bin=True)
+        sp.OPERATION_TYPES.add(type(value))
+        if(isinstance(value, set)):
+            pass
     def value(self): return self.__VALUE # type: ignore
 
 class Op_Control(Op_Base):

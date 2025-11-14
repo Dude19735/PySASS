@@ -877,7 +877,7 @@ if __name__ == '__main__' or True:
     # sp.TEST__MOCK_INSTRUCTIONS = False
     sass = {}
     sms = [50, 52, 53, 60, 61, 62, 70, 72, 75, 80, 86, 90, 100, 120]
-    sms = [120]
+    # sms = [120]
     # sms = [86, 90, 100, 120]
     # sms = [50]
     # import time
@@ -897,7 +897,7 @@ if __name__ == '__main__' or True:
         # for class_ in sass.sm.classes_dict.values():
         #     lcg, lcp = sass.get_class_mem_access_patterns(class_)
         #     print(lcp, class_.class_name)
-        # sass.get_mem_access_patterns()
+        # sass.get_mem_access_patterns() 
         # sass.load_encdom_small()
         # sass.to_files()
         # t1 = time.time()

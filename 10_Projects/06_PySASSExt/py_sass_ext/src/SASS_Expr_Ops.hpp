@@ -13,6 +13,8 @@
 #include "TT_Terms.hpp"
 
 namespace SASS {
+    using TOperandVal = std::variant<FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode>;
+
     struct TOp_EncVals {
         TEncVals arg0;
     };
@@ -24,6 +26,10 @@ namespace SASS {
 
     struct TOp_Var {
         FArgs arg0;
+    };
+
+    struct TOp_Var_Operand {
+        TOperandVal arg0;
     };
 
     struct TOp_Var_Var_EncVals {
@@ -39,9 +45,8 @@ namespace SASS {
 
     struct TOp_Void {};
 
-    using VArg = std::variant<TOp_EncVals, TOp_Var_Var, TOp_Var, TOp_Var_Var_EncVals, TOp_List_EncVals, TOp_Void>;
+    using VArg = std::variant<TOp_EncVals, TOp_Var_Var, TOp_Var, TOp_Var_Var_EncVals, TOp_List_EncVals, TOp_Void, TOp_Var_Operand>;
     using FOperation = std::function<FArgs(const VArg&)>;
-    using TTerm = std::variant<int, TT_Func, TT_Reg, std::string, std::set<std::string>, TT_AtOp>;
 
     /// @brief Most basic op token class
     class Op_Base {
@@ -66,7 +71,7 @@ namespace SASS {
             return false;
         }
 
-        virtual FArgs value() const { throw std::runtime_error("UNDEFINED"); }
+        virtual FArgs value() const { throw not_implemented("If you reach this point, you missed an overwrite somewhere..."); }
     };
 
     /// @brief Abstract op token classes
@@ -87,10 +92,12 @@ namespace SASS {
         Op_Control(FOperation op_f, const std::string& op_str) : Op_Base(op_f, op_str) {}
     };
     class Op_Operand : public Op_Base {
-        TTerm _value;
+        TOperandVal _value;
     public:
-        Op_Operand(FOperation op_f, const std::string& name, const TTerm& value) : Op_Base(op_f, name), _value(value) {}
-        TTerm value() const override { return _value; }
+        // ['int', 'str', 'TT_AtOp', 'TT_Func', 'set', 'TT_Reg']
+        Op_Operand(FOperation op_f, const std::string& name, const TOperandVal& value) : Op_Base(op_f, name), _value(value) {}
+        TOperandVal op_value() const { return _value; }
+        FArgs value() const override { throw not_implemented("For Op_Operand, use op_value(), since it's a custom type."); }
     };
     class Op_ParamSplit : public Op_Base {
     public:
@@ -160,22 +167,73 @@ namespace SASS {
         }
     public:
         // Function, 
-        Op_AtOperand(const std::string& name, const TTerm& term) : Op_Operand([this](const VArg& p) {
+        Op_AtOperand(const std::string& name, const TT_AtOp& term) : Op_Operand([this](const VArg& p) {
             if(!std::holds_alternative<TOp_EncVals>(p)) throw std::runtime_error(err_msg("Op_AtOperand", "TOp_EncVals"));
             return operation_at(std::get<TOp_EncVals>(p));
         }, name, term) {}
     };
 
     /// @brief All the op token classes that have an @
-    class Op_AtNot : public Op_AtOperand { public: Op_AtNot(const std::string& name, const TTerm& term) : Op_AtOperand(name, term) {} };
-    class Op_AtNegate : public Op_AtOperand { public: Op_AtNegate(const std::string& name, const TTerm& term) : Op_AtOperand(name, term) {} };
-    class Op_AtAbs : public Op_AtOperand { public: Op_AtAbs(const std::string& name, const TTerm& term) : Op_AtOperand(name, term) {} };
-    class Op_AtSign : public Op_AtOperand { public: Op_AtSign(const std::string& name, const TTerm& term) : Op_AtOperand(name, term) {} };
-    class Op_AtInvert : public Op_AtOperand { public: Op_AtInvert(const std::string& name, const TTerm& term) : Op_AtOperand(name, term) {} };
+    class Op_AtNot : public Op_AtOperand { public: Op_AtNot(const std::string& name, const TT_AtOp& term) : Op_AtOperand(name, term) {} };
+    class Op_AtNegate : public Op_AtOperand { public: Op_AtNegate(const std::string& name, const TT_AtOp& term) : Op_AtOperand(name, term) {} };
+    class Op_AtAbs : public Op_AtOperand { public: Op_AtAbs(const std::string& name, const TT_AtOp& term) : Op_AtOperand(name, term) {} };
+    class Op_AtSign : public Op_AtOperand { public: Op_AtSign(const std::string& name, const TT_AtOp& term) : Op_AtOperand(name, term) {} };
+    class Op_AtInvert : public Op_AtOperand { public: Op_AtInvert(const std::string& name, const TT_AtOp& term) : Op_AtOperand(name, term) {} };
+    class Op_Int : public Op_Operand {
+        FArgs int_operation(const TOp_Var_Operand& arg) {
+            if(!std::holds_alternative<FArgInt>) throw std::runtime_error(err_msg("Op_int::int_operation", "TOp_Var_Operand::FArgInt"));
+            return std::get<FArgInt>(arg.arg0); 
+        } 
+    public: 
+        Op_Int(const std::string& str_value, int val) : Op_Operand([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Operand>(p))  throw std::runtime_error(err_msg("Op_Int", "TOp_Var_Operand"));
+            return int_operation(std::get<TOp_Var_Operand>(p));
+        }, str_value, val) {} 
+    };
+    class Op_Opcode : public Op_Operand {
+        FArgs opcode_operation() {
+            TOperandVal val = op_value();
+            if(!std::holds_alternative<TT_ICode>(val)) throw std::runtime_error(err_msg("Op_Opcode::opcode_operation", "TOperandVal::TT_ICode"));
+            const TT_ICode& icode = std::get<TT_ICode>(val);
+            const auto bb = BitVector(icode.bin_tup().begin(), icode.bin_tup().end());
+            return SASS_Bits(bb, bb.size(), false);
+        }
+    public:
+        Op_Opcode(const std::string& name, const TT_ICode& term) : Op_Operand([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_EncVals>(p))  throw std::runtime_error(err_msg("Op_Opcode", "TOp_EncVals"));
+            return opcode_operation();
+        }, name, term) {} 
+    };
+    class Op_Alias : public Op_Operand {
+        FArgs alias_operation(const TOp_EncVals& enc_vals) {
+            TEncVals ev = enc_vals.arg0;
+            TOperandVal val = op_value();
+            if(std::holds_alternative<TT_Func>(val)){
 
-    class Op_Int : public Op_Operand {};
-    class Op_Opcode : public Op_Base {};
-    class Op_Alias : public Op_Operand {};
+            }
+            else if(std::holds_alternative<TT_Reg>(val)){
+
+            }
+            else {
+                
+            }
+        }
+    public:
+        Op_Alias(const std::string& name, TOperandVal term) : Op_Operand([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_EncVals>(p)) throw std::runtime_error(err_msg("Op_Alias", "TOp_EncVals"));
+            return alias_operation(std::get<TOp_EncVals>(p));
+        }, name, term) {}
+    };
+// class Op_Alias(Op_Operand):
+//     A=sp.EXPR_OP_ASSOCIATIV_GROUP_OPERAND
+//     P=sp.EXPR_OP_PRECEDENCE_NR_OPERAND
+//     def alias_operation(self, enc_vals:dict):
+//         if not str(self) in enc_vals.keys(): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+//         return enc_vals[str(self)]
+//     def __init__(self, name:str, term): 
+//         if not isinstance(term, TT_Reg|TT_Func):
+//             raise Exception(sp.CONST__ERROR_UNEXPECTED)
+//         super().__init__(self.alias_operation, name, term)
     class Op_Set : public Op_Operand {};
     class Op_Parameter : public Op_Operand {};
     class Op_Constant : public Op_Operand {};

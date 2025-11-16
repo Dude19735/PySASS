@@ -12,6 +12,7 @@
 #include <type_traits>
 #include <utility>
 #include <array>
+#include <stdexcept>
 
 // These are basic types: we don't use Utils in there!!
 #include "SASS_Bits.hpp"
@@ -216,5 +217,11 @@ namespace SASS {
 
             return val;
         }
+    };
+
+    class not_implemented : public std::logic_error {
+    public:
+        explicit not_implemented(const std::string& what_arg = "Not implemented!")
+            : std::logic_error(what_arg) {}
     };
 }

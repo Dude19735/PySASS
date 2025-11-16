@@ -889,10 +889,11 @@ if __name__ == '__main__' or True:
         # t0 = time.time()
         sass = SM_SASS(sm, reparse=True, finalize=True, opcode_gen=True, lookup_gen=True, web_crawl=False, collect_statistics=False)
         # sass = SM_SASS(sm, reparse=False, finalize=False, opcode_gen=False, lookup_gen=False, web_crawl=False, collect_statistics=False)
-        jj = sass.lu_to_json()
+        # jj = sass.lu_to_json()
         pass
 
-    SM_SASS.create_lookup_db(sms)
+    pass
+    # SM_SASS.create_lookup_db(sms)
         # test_list_operands(sass)
         # for class_ in sass.sm.classes_dict.values():
         #     lcg, lcp = sass.get_class_mem_access_patterns(class_)

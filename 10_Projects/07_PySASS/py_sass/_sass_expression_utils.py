@@ -84,8 +84,8 @@ class Op_Operand(Op_Base):
         self.__VALUE:object
         self.__VALUE = su.try_convert(value, convert_bin=True, convert_hex=True, convert_split_bin=True)
         sp.OPERATION_TYPES.add(type(value))
-        if(isinstance(value, set)):
-            pass
+        if isinstance(value, set):
+            sp.OPERATION_TYPES.add('ST-{'+str(set(type(v).__name__ for v in value)) + '}')
     def value(self): return self.__VALUE # type: ignore
 
 class Op_Control(Op_Base):

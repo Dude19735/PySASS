@@ -331,11 +331,11 @@ namespace SASS {
 //         self.__TC_FF:typ.Callable
 //         self.__TC_FF = tc_ff
     class Op_TypeCast : public Op_Function {
-        FArgs tp_operation(const TOp_List_EncVals& arg) {
-            TOperationVal val = value();
-            if(!std::holds_alternative<TOp_List_EncVals>(val)) throw std::runtime_error("Op_TypeCast requires TOp_List_EncVals in args");
+        FArgs tp_operation(const TOp_List_EncVals& args) {
+            if(!args.arg0.size() == 1) throw std::runtime_error("Op_TypeCast requires TOp_List_EncVals with one thing in args.arg0");
+            TOperationVal val = args.arg0.at(0);
             int64_t ival = std::get<FArgInt>(val);
-            return SASS_Bits::from_int(ival, 0, 0);
+            return  SASS_Bits::from_int(ival, 0, 0);
         }
     public:
         Op_TypeCast(CONVERT_FUNC tc_ff) : Op_Function([this](const VArg& p) {

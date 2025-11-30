@@ -11,6 +11,11 @@ All the modules are available as
 from py_sass_ext import *
 ```
 
+### How to create local venv
+```bash
+python3.13 -m venv ~/.venvs/pysass
+```
+
 ### How to install localy
 * make sure to activate the correct virtual environment
     * for example 

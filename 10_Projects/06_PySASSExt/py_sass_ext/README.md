@@ -56,3 +56,25 @@ from py_sass_ext import *
 * possibly increase the version number in ```pyproject.toml```
     * this is not necessary if ```pip install .``` is used
     * there is no need to change anything else in this file
+
+### Example of c_cpp_properties.json
+Use this file to get rid of of all the squibbled red lines where something does not find something...
+```json
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/../nanobind/include/**",
+                "/usr/include/python3.13/**",
+                "/usr/lib/gcc/x86_64-linux-gnu/13/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "intelliSenseMode": "linux-clang-x64"
+        }
+    ],
+    "version": 4
+}
+```

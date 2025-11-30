@@ -24,7 +24,10 @@ namespace SASS {
     using FArgSASSBits = SASS_Bits;
     using FArgBool = bool;
     using FArgFloat = float;
-    using TConvertVariant = std::variant<FArgInt, FArgFloat, FArgBool, FArgString>;
+    using FArgSet = std::set<std::string>;
+    using FArgs = std::variant<FArgInt, FArgSASSBits, FArgBool, FArgSet, FArgString, FArgFloat>;
+
+    // using TConvertVariant = std::variant<FArgInt, FArgFloat, FArgBool, FArgString>;
     using TDomain = std::variant<std::set<SASS_Bits>, SASS_Range>;
     using TOptionsSet = std::set<int>;
     using TStrOptionsSet = std::set<std::string>;
@@ -32,7 +35,6 @@ namespace SASS {
     using TValue = std::variant<std::string, int>;
     using TOptions = std::unordered_map<TValue, TOptionsSet>;
 
-    using FArgs = std::variant<FArgInt, FArgSASSBits, FArgBool>;
     using TEncVals = std::unordered_map<std::string, SASS_Bits>;
 
     class Utils {
@@ -133,16 +135,16 @@ namespace SASS {
             return res.str();
         }
 
-        static TConvertVariant try_convert(float val, bool convert_hex=false, bool convert_bin=false, bool convert_split_bin=false, bool replace_quotes=false){
-            return TConvertVariant(val);
+        static FArgs try_convert(float val, bool convert_hex=false, bool convert_bin=false, bool convert_split_bin=false, bool replace_quotes=false){
+            return FArgs(val);
         }
 
-        static TConvertVariant try_convert(int val, bool convert_hex=false, bool convert_bin=false, bool convert_split_bin=false, bool replace_quotes=false){
-            return TConvertVariant(val);
+        static FArgs try_convert(int val, bool convert_hex=false, bool convert_bin=false, bool convert_split_bin=false, bool replace_quotes=false){
+            return FArgs(val);
         }
 
-        static TConvertVariant try_convert(const std::string& val, bool convert_hex=false, bool convert_bin=false, bool convert_split_bin=false, bool replace_quotes=false){
-            return TConvertVariant(val.c_str());
+        static FArgs try_convert(const std::string& val, bool convert_hex=false, bool convert_bin=false, bool convert_split_bin=false, bool replace_quotes=false){
+            return FArgs(val.c_str());
         }
 
         // static TConvertVariant try_convert(const char* val, bool convert_hex=false, bool convert_bin=false, bool convert_split_bin=false, bool replace_quotes=false){
@@ -161,7 +163,7 @@ namespace SASS {
         /// @param convert_split_bin 
         /// @param replace_quotes 
         /// @return 
-        static TConvertVariant try_convert(const char* value, bool convert_hex=false, bool convert_bin=false, bool convert_split_bin=false, bool replace_quotes=false){     
+        static FArgs try_convert(const char* value, bool convert_hex=false, bool convert_bin=false, bool convert_split_bin=false, bool replace_quotes=false){     
             std::string val(value);
             if(replace_quotes) val = Utils::replace(val, '"', 0);
             else val = Utils::strip(val);

@@ -50,47 +50,47 @@ void test_split() {
 
 void test_convert() {
     {
-        SASS::TConvertVariant res = SASS::Utils::try_convert("0x000000", true);
+        SASS::FArgs res = SASS::Utils::try_convert("0x000000", true);
         assert(std::holds_alternative<int>(res));
         assert(std::get<int>(res) == 0);
     }
     {
-        SASS::TConvertVariant res = SASS::Utils::try_convert("0x000000");
+        SASS::FArgs res = SASS::Utils::try_convert("0x000000");
         assert(std::holds_alternative<std::string>(res));
         assert(std::get<std::string>(res).compare("0x000000") == 0);
     }
     {
-        SASS::TConvertVariant res = SASS::Utils::try_convert("1.0f");
+        SASS::FArgs res = SASS::Utils::try_convert("1.0f");
         assert(std::holds_alternative<float>(res));
         assert(std::get<float>(res) == 1.0f);
     }
     {
-        SASS::TConvertVariant res = SASS::Utils::try_convert("0b01101", false, true);
+        SASS::FArgs res = SASS::Utils::try_convert("0b01101", false, true);
         assert(std::holds_alternative<int>(res));
         assert(std::get<int>(res) == 13);
     }
     {
-        SASS::TConvertVariant res = SASS::Utils::try_convert("0b01101", false, false);
+        SASS::FArgs res = SASS::Utils::try_convert("0b01101", false, false);
         assert(std::holds_alternative<std::string>(res));
         assert(std::get<std::string>(res).compare("0b01101") == 0);
     }
     {
-        SASS::TConvertVariant res = SASS::Utils::try_convert("0b01_101", false, true, true);
+        SASS::FArgs res = SASS::Utils::try_convert("0b01_101", false, true, true);
         assert(std::holds_alternative<int>(res));
         assert(std::get<int>(res) == 13);
     }
     {
-        SASS::TConvertVariant res = SASS::Utils::try_convert("0b01_101", false, true);
+        SASS::FArgs res = SASS::Utils::try_convert("0b01_101", false, true);
         assert(std::holds_alternative<std::string>(res));
         assert(std::get<std::string>(res).compare("0b01_101") == 0);
     }
     {
-        SASS::TConvertVariant res = SASS::Utils::try_convert("True");
+        SASS::FArgs res = SASS::Utils::try_convert("True");
         assert(std::holds_alternative<bool>(res));
         assert(std::get<bool>(res) == true);
     }
     {
-        SASS::TConvertVariant res = SASS::Utils::try_convert("False");
+        SASS::FArgs res = SASS::Utils::try_convert("False");
         assert(std::holds_alternative<bool>(res));
         assert(std::get<bool>(res) == false);
     }

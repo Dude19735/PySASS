@@ -13,39 +13,42 @@
 #include "TT_Terms.hpp"
 
 namespace SASS {
-    using TOperandVal = std::variant<FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode>;
+    /**
+     * Define it like this:
+     *  - TOperationVal = all the types that parsed tokens can have that are used in expressions
+     *  - the operations of every single one of the operation classes converts a TOperationVal to an FArgs
+     *  - the TOp_.... structs aret the input pattern that is passed ot the operations functions
+     *  - TOperationVAl can be empty if the value is the same as the string
+     */
+    using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode>;
 
     struct TOp_EncVals {
         TEncVals arg0;
     };
 
     struct TOp_Var_Var {
-        FArgs arg0;
-        FArgs arg1;
+        TOperationVal arg0;
+        TOperationVal arg1;
     };
 
     struct TOp_Var {
-        FArgs arg0;
-    };
-
-    struct TOp_Var_Operand {
-        TOperandVal arg0;
+        TOperationVal arg0;
     };
 
     struct TOp_Var_Var_EncVals {
-        FArgs arg0;
-        FArgs arg1;
+        TOperationVal arg0;
+        TOperationVal arg1;
         TEncVals arg2;
     };
 
     struct TOp_List_EncVals {
-        std::vector<FArgs> arg0;
+        std::vector<TOperationVal> arg0;
         TEncVals arg1;
     };
 
     struct TOp_Void {};
 
-    using VArg = std::variant<TOp_EncVals, TOp_Var_Var, TOp_Var, TOp_Var_Var_EncVals, TOp_List_EncVals, TOp_Void, TOp_Var_Operand>;
+    using VArg = std::variant<TOp_EncVals, TOp_Var_Var, TOp_Var, TOp_Var_Var_EncVals, TOp_List_EncVals, TOp_Void>;
     using FOperation = std::function<FArgs(const VArg&)>;
 
     /// @brief Most basic op token class
@@ -53,6 +56,7 @@ namespace SASS {
         Op_Base* _next;
         std::string _op_str;
         FOperation _op_f;
+        TOperationVal _value;
     protected:
         FArgs undefined(const TOp_Void& x){ throw std::runtime_error("Called undefined operation function!"); }
     public:
@@ -71,7 +75,7 @@ namespace SASS {
             return false;
         }
 
-        virtual FArgs value() const { throw not_implemented("If you reach this point, you missed an overwrite somewhere..."); }
+        virtual TOperationVal value() const { return _value; }
     };
 
     /// @brief Abstract op token classes
@@ -92,12 +96,9 @@ namespace SASS {
         Op_Control(FOperation op_f, const std::string& op_str) : Op_Base(op_f, op_str) {}
     };
     class Op_Operand : public Op_Base {
-        TOperandVal _value;
     public:
         // ['int', 'str', 'TT_AtOp', 'TT_Func', 'set', 'TT_Reg']
-        Op_Operand(FOperation op_f, const std::string& name, const TOperandVal& value) : Op_Base(op_f, name), _value(value) {}
-        TOperandVal op_value() const { return _value; }
-        FArgs value() const override { throw not_implemented("For Op_Operand, use op_value(), since it's a custom type."); }
+        Op_Operand(FOperation op_f, const std::string& name, const TOperationVal& value) : Op_Base(op_f, name), _value(value) {}
     };
     class Op_ParamSplit : public Op_Base {
     public:
@@ -192,8 +193,8 @@ namespace SASS {
     };
     class Op_Opcode : public Op_Operand {
         FArgs opcode_operation() {
-            TOperandVal val = op_value();
-            if(!std::holds_alternative<TT_ICode>(val)) throw std::runtime_error(err_msg("Op_Opcode::opcode_operation", "TOperandVal::TT_ICode"));
+            TOperationVal val = value();
+            if(!std::holds_alternative<TT_ICode>(val)) throw std::runtime_error(err_msg("Op_Opcode::opcode_operation", "TOperationVal::TT_ICode"));
             const TT_ICode& icode = std::get<TT_ICode>(val);
             const auto bb = BitVector(icode.bin_tup().begin(), icode.bin_tup().end());
             return SASS_Bits(bb, bb.size(), false);
@@ -203,38 +204,41 @@ namespace SASS {
             if(!std::holds_alternative<TOp_EncVals>(p))  throw std::runtime_error(err_msg("Op_Opcode", "TOp_EncVals"));
             return opcode_operation();
         }, name, term) {} 
+        FArgs value() const override {
+
+        }
     };
     class Op_Alias : public Op_Operand {
         FArgs alias_operation(const TOp_EncVals& enc_vals) {
             TEncVals ev = enc_vals.arg0;
-            TOperandVal val = op_value();
+            TOperationVal val = op_value();
             if(std::holds_alternative<TT_Func>(val)){
-
+                const TT_Func& func =  std::get<TT_Func>(val);
+                const std::string func_str = func.__str__();
+                if(enc_vals.arg0.find(func_str) == enc_vals.arg0.end()) throw std::runtime_error("Op_Alias: unexpected function name!");
+                return enc_vals.arg0.at(func_str);
             }
             else if(std::holds_alternative<TT_Reg>(val)){
-
+                const TT_Reg& reg =  std::get<TT_Reg>(val);
+                const std::string reg_str = reg.__str__();
+                if(enc_vals.arg0.find(reg_str) == enc_vals.arg0.end()) throw std::runtime_error("Op_Alias: unexpected register name!");
+                return enc_vals.arg0.at(reg_str);
             }
             else {
-                
+                throw std::runtime_error("Op_Alias: unexpected operand type!");
             }
         }
     public:
-        Op_Alias(const std::string& name, TOperandVal term) : Op_Operand([this](const VArg& p) {
+        Op_Alias(const std::string& name, TOperationVal term) : Op_Operand([this](const VArg& p) {
             if(!std::holds_alternative<TOp_EncVals>(p)) throw std::runtime_error(err_msg("Op_Alias", "TOp_EncVals"));
             return alias_operation(std::get<TOp_EncVals>(p));
         }, name, term) {}
     };
-// class Op_Alias(Op_Operand):
-//     A=sp.EXPR_OP_ASSOCIATIV_GROUP_OPERAND
-//     P=sp.EXPR_OP_PRECEDENCE_NR_OPERAND
-//     def alias_operation(self, enc_vals:dict):
-//         if not str(self) in enc_vals.keys(): raise Exception(sp.CONST__ERROR_UNEXPECTED)
-//         return enc_vals[str(self)]
-//     def __init__(self, name:str, term): 
-//         if not isinstance(term, TT_Reg|TT_Func):
-//             raise Exception(sp.CONST__ERROR_UNEXPECTED)
-//         super().__init__(self.alias_operation, name, term)
-    class Op_Set : public Op_Operand {};
+    class Op_Set : public Op_Operand {
+        FArgs set_operation(const TOp_EncVals& arg) {
+            return op_value();
+        }
+    };
     class Op_Parameter : public Op_Operand {};
     class Op_Constant : public Op_Operand {};
     class Op_Register : public Op_Operand {

@@ -172,7 +172,7 @@ namespace SASS {
     private:
         void sub_2(const std::string& e, std::vector<std::string>& res) {
                 // val = su.try_convert(e, convert_bin=True, convert_hex=True)
-                TConvertVariant val = Utils::try_convert(e, false, true, false, false);
+                FArgs val = Utils::try_convert(e, false, true, false, false);
 
                 if(std::holds_alternative<TConvertInt>(val))
                     res.push_back(Op_Int(e.strip(), val))

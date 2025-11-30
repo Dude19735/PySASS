@@ -63,7 +63,18 @@ namespace SASS {
         static std::string err_msg(const std::string& obj_name, const std::string& type_name){
             return std::vformat("Invalid Argument: [{}] must be called with [{}]", std::make_format_args(obj_name, type_name));
         }
-        Op_Base(FOperation op_f, const std::string& op_str) : _next(nullptr), _op_str(op_str), _op_f(op_f) {}
+        static FArgs operations_val_to_fargs(const TOperationVal& val) {
+            // std::variant<SASS::FArgInt, SASS::FArgSASSBits, SASS::FArgBool, SASS::FArgSet, SASS::FArgString, SASS::FArgFloat>
+            if(std::holds_alternative<FArgInt>(val)) return std::get<FArgInt>(val);
+            if(std::holds_alternative<FArgSASSBits>(val)) return std::get<FArgSASSBits>(val);
+            if(std::holds_alternative<FArgBool>(val)) return std::get<FArgBool>(val);
+            if(std::holds_alternative<FArgSet>(val)) return std::get<FArgSet>(val);
+            if(std::holds_alternative<FArgString>(val)) return std::get<FArgString>(val);
+            if(std::holds_alternative<FArgFloat>(val)) return std::get<FArgFloat>(val);
+            throw std::runtime_error("Invalid type for TOperationsVal to FArgs");
+        }
+        Op_Base(FOperation op_f, const std::string& op_str) : _next(nullptr), _op_str(op_str), _op_f(op_f), _value(std::monostate()) {}
+        Op_Base(FOperation op_f, const std::string& op_str, const TOperationVal& value) : _next(nullptr), _op_str(op_str), _op_f(op_f), _value(value) {}
 
         std::string __str__() const { return _op_str; }
         std::string signature() const { return std::string(typeid(Op_Base).name()); }
@@ -89,7 +100,7 @@ namespace SASS {
     };
     class Op_Function : public Op_Base {
     public:
-        Op_Function(FOperation op_f, const std::string& op_str) : Op_Base(op_f, op_str) {}
+        Op_Function(FOperation op_f, const FUNC& func) : Op_Base(op_f, FUNC_to_str(func)) {}
     };
     class Op_Control : public Op_Base {
     public:
@@ -98,7 +109,7 @@ namespace SASS {
     class Op_Operand : public Op_Base {
     public:
         // ['int', 'str', 'TT_AtOp', 'TT_Func', 'set', 'TT_Reg']
-        Op_Operand(FOperation op_f, const std::string& name, const TOperationVal& value) : Op_Base(op_f, name), _value(value) {}
+        Op_Operand(FOperation op_f, const std::string& name, const TOperationVal& val) : Op_Base(op_f, name, val) {}
     };
     class Op_ParamSplit : public Op_Base {
     public:
@@ -110,7 +121,9 @@ namespace SASS {
 
     /// @brief Container for everything op token class
     class Op_Value : public Op_Base {
-        FArgs value_operation(const TOp_Var& arg) { return arg.arg0; }
+        FArgs value_operation(const TOp_Var& arg) { 
+            return Op_Base::operations_val_to_fargs(arg.arg0);
+        }
     public:
         Op_Value() : Op_Base([this](const VArg& p) {
             if(!std::holds_alternative<TOp_Var>(p)) throw std::runtime_error(err_msg("Op_Value", "TOp_Var"));
@@ -181,14 +194,14 @@ namespace SASS {
     class Op_AtSign : public Op_AtOperand { public: Op_AtSign(const std::string& name, const TT_AtOp& term) : Op_AtOperand(name, term) {} };
     class Op_AtInvert : public Op_AtOperand { public: Op_AtInvert(const std::string& name, const TT_AtOp& term) : Op_AtOperand(name, term) {} };
     class Op_Int : public Op_Operand {
-        FArgs int_operation(const TOp_Var_Operand& arg) {
+        FArgs int_operation(const TOp_Var& arg) {
             if(!std::holds_alternative<FArgInt>) throw std::runtime_error(err_msg("Op_int::int_operation", "TOp_Var_Operand::FArgInt"));
             return std::get<FArgInt>(arg.arg0); 
         } 
     public: 
         Op_Int(const std::string& str_value, int val) : Op_Operand([this](const VArg& p) {
-            if(!std::holds_alternative<TOp_Var_Operand>(p))  throw std::runtime_error(err_msg("Op_Int", "TOp_Var_Operand"));
-            return int_operation(std::get<TOp_Var_Operand>(p));
+            if(!std::holds_alternative<TOp_Var>(p))  throw std::runtime_error(err_msg("Op_Int", "TOp_Var_Operand"));
+            return int_operation(std::get<TOp_Var>(p));
         }, str_value, val) {} 
     };
     class Op_Opcode : public Op_Operand {
@@ -203,15 +216,12 @@ namespace SASS {
         Op_Opcode(const std::string& name, const TT_ICode& term) : Op_Operand([this](const VArg& p) {
             if(!std::holds_alternative<TOp_EncVals>(p))  throw std::runtime_error(err_msg("Op_Opcode", "TOp_EncVals"));
             return opcode_operation();
-        }, name, term) {} 
-        FArgs value() const override {
-
-        }
+        }, name, term) {}
     };
     class Op_Alias : public Op_Operand {
         FArgs alias_operation(const TOp_EncVals& enc_vals) {
             TEncVals ev = enc_vals.arg0;
-            TOperationVal val = op_value();
+            TOperationVal val = value();
             if(std::holds_alternative<TT_Func>(val)){
                 const TT_Func& func =  std::get<TT_Func>(val);
                 const std::string func_str = func.__str__();
@@ -236,11 +246,42 @@ namespace SASS {
     };
     class Op_Set : public Op_Operand {
         FArgs set_operation(const TOp_EncVals& arg) {
-            return op_value();
+            TOperationVal val = value();
+            if(!std::holds_alternative<FArgSet>(val)) throw std::runtime_error("Op_Set requires FArgSet in args");
+            return std::get<FArgSet>(val);
         }
+    public:
+        Op_Set(const std::string& name, FArgSet set) : Op_Operand([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_EncVals>(p)) throw std::runtime_error(err_msg("Op_Set", "TOp_EncVals"));
+            return set_operation(std::get<TOp_EncVals>(p));
+        }, name, set) {}
     };
-    class Op_Parameter : public Op_Operand {};
-    class Op_Constant : public Op_Operand {};
+    class Op_Parameter : public Op_Operand {
+        FArgs param_operation(const TOp_EncVals& arg) {
+            TOperationVal val = value();
+            if(!std::holds_alternative<FArgInt>(val)) throw std::runtime_error("Op_Parameter requires FArgInt in args");
+            int64_t ival = std::get<FArgInt>(val);
+            return SASS_Bits::from_int(ival, 0, 0);
+        }
+    public:
+        Op_Parameter(const std::string& name, FArgInt val) : Op_Operand([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_EncVals>(p)) throw std::runtime_error(err_msg("Op_Parameter", "TOp_EncVals"));
+            return param_operation(std::get<TOp_EncVals>(p));
+        }, name, val) {}
+    };
+    class Op_Constant : public Op_Operand {
+        FArgs constant_operation(const TOp_EncVals& arg) {
+            TOperationVal val = value();
+            if(!std::holds_alternative<FArgInt>(val)) throw std::runtime_error("Op_Constant requires FArgInt in args");
+            int64_t ival = std::get<FArgInt>(val);
+            return SASS_Bits::from_int(ival, 0, 0);
+        }
+    public:
+        Op_Constant(const std::string& name, FArgInt val) : Op_Operand([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_EncVals>(p)) throw std::runtime_error(err_msg("Op_Constant", "TOp_EncVals"));
+            return constant_operation(std::get<TOp_EncVals>(p));
+        }, name, val) {}
+    };
     class Op_Register : public Op_Operand {
         std::string _parent_register;
         std::string _register;
@@ -277,7 +318,31 @@ namespace SASS {
     };
 
     /// @brief All function-like op token classes
-    class Op_TypeCast : public Op_Function {};
+// class Op_TypeCast(Op_Function):
+//     """If we have a convertFloatType, this one will be the first argument, containing the type things get typecasted to."""
+//     A=sp.EXPR_OP_ASSOCIATIV_GROUP_FUNCTION
+//     P=sp.EXPR_OP_PRECEDENCE_NR_FUNCTION
+//     def operation_cast(self, args, enc_vals:dict) -> SASS_Bits:
+//         if not len(args) == 1: raise Exception(sp.CONST__ERROR_UNEXPECTED)
+//         return self.__TC_FF(args[0])
+//     def __init__(self, tc_ff:F16Imm|F32Imm|F64Imm|E6M9Imm|E8M7Imm): 
+//         if not (type(tc_ff) in _sass_func.CONVERT_FUNC.values()): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+//         super().__init__(self.operation_cast, str(tc_ff))
+//         self.__TC_FF:typ.Callable
+//         self.__TC_FF = tc_ff
+    class Op_TypeCast : public Op_Function {
+        FArgs tp_operation(const TOp_List_EncVals& arg) {
+            TOperationVal val = value();
+            if(!std::holds_alternative<TOp_List_EncVals>(val)) throw std::runtime_error("Op_TypeCast requires TOp_List_EncVals in args");
+            int64_t ival = std::get<FArgInt>(val);
+            return SASS_Bits::from_int(ival, 0, 0);
+        }
+    public:
+        Op_TypeCast(CONVERT_FUNC tc_ff) : Op_Function([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_List_EncVals>(p)) throw std::runtime_error(err_msg("Op_TypeCast", "TOp_List_EncVals"));
+            return tp_operation(std::get<TOp_List_EncVals>(p));
+        }, CONVERT_FUNC_to_FUNC(tc_ff)) {}
+    };
     class Op_ConstBankAddress2 : public Op_Function {};
     class Op_ConstBankAddress0 : public Op_Function {};
     class Op_Identical : public Op_Function {};

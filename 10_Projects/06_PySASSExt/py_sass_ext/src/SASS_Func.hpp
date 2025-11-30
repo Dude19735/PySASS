@@ -189,8 +189,79 @@ namespace SASS {
         }
     };
 
-    const std::set<std::string_view> CONVERT_FUNC = { func_cv_F16Imm, func_cv_F32Imm, func_cv_F64Imm, func_cv_E6M9Imm, func_cv_E8M7Imm };
-    const std::set<std::string_view> FIXED_BIT_FUNC = { func_fb_F16Imm, func_fb_F32Imm, func_fb_F64Imm, func_fb_E6M9Imm, func_fb_E8M7Imm };
-    const std::set<std::string_view>  FUNC = { func_RSImm, func_UImm, func_F16Imm, func_SImm, func_SSImm, func_F64Imm, func_F32Imm, func_BITSET, func_E8M7Imm, func_E6M9Imm };
+    enum class CONVERT_FUNC { F16Imm, F32Imm,  F64Imm,  E6M9Imm, E8M7Imm };
+    enum class FIXED_BIT_FUNC { F16Imm, F32Imm, F64Imm, E6M9Imm, E8M7Imm };
+    enum class FUNC { RSImm, UImm, F16Imm, SImm, SSImm, F64Imm, F32Imm, BITSET, E8M7Imm, E6M9Imm };
+
     using TFunc = std::variant<RSImm, UImm, F16Imm, SImm, SSImm, F64Imm, F32Imm, BITSET, E8M7Imm, E6M9Imm>;
+
+    std::string CONVERT_FUNC_to_str(const CONVERT_FUNC& val) {
+        switch(val) {
+            case CONVERT_FUNC::F16Imm: return "F16Imm";
+            case CONVERT_FUNC::F32Imm: return "F32Imm";
+            case CONVERT_FUNC::F64Imm: return "F64Imm";
+            case CONVERT_FUNC::E6M9Imm: return "E6M9Imm";
+            case CONVERT_FUNC::E8M7Imm: return "E8M7Imm";
+        }
+    }
+
+    std::string FIXED_BIT_FUNC_to_str(const FIXED_BIT_FUNC& val) {
+        switch(val) {
+            case FIXED_BIT_FUNC::F16Imm: return "F16Imm";
+            case FIXED_BIT_FUNC::F32Imm: return "F32Imm";
+            case FIXED_BIT_FUNC::F64Imm: return "F64Imm";
+            case FIXED_BIT_FUNC::E6M9Imm: return "E6M9Imm";
+            case FIXED_BIT_FUNC::E8M7Imm: return "E8M7Imm";
+        }
+    }
+
+    std::string FUNC_to_str(const FUNC& val) {
+        switch(val) {
+            case FUNC::RSImm: return "RSImm"; 
+            case FUNC::UImm: return "UImm"; 
+            case FUNC::F16Imm: return "F16Imm"; 
+            case FUNC::SImm: return "SImm"; 
+            case FUNC::SSImm: return "SSImm"; 
+            case FUNC::F64Imm: return "F64Imm"; 
+            case FUNC::F32Imm: return "F32Imm"; 
+            case FUNC::BITSET: return "BITSET"; 
+            case FUNC::E8M7Imm: return "E8M7Imm"; 
+            case FUNC::E6M9Imm: return "E6M9Imm";
+        }
+    }
+
+    FUNC CONVERT_FUNC_to_FUNC(CONVERT_FUNC val) {
+        switch(val) {
+            case CONVERT_FUNC::F16Imm: return FUNC::F16Imm;
+            case CONVERT_FUNC::F32Imm: return FUNC::F32Imm;
+            case CONVERT_FUNC::F64Imm: return FUNC::F64Imm;
+            case CONVERT_FUNC::E6M9Imm: return FUNC::E6M9Imm;
+            case CONVERT_FUNC::E8M7Imm: return FUNC::E8M7Imm;
+        }
+    }
+
+    FUNC FIXED_BIT_FUNC_to_FUNC(FIXED_BIT_FUNC val) {
+        switch(val) {
+            case FIXED_BIT_FUNC::F16Imm: return FUNC::F16Imm;
+            case FIXED_BIT_FUNC::F32Imm: return FUNC::F32Imm;
+            case FIXED_BIT_FUNC::F64Imm: return FUNC::F64Imm;
+            case FIXED_BIT_FUNC::E6M9Imm: return FUNC::E6M9Imm;
+            case FIXED_BIT_FUNC::E8M7Imm: return FUNC::E8M7Imm;
+        }
+    }
+
+    SASS_Bits cast(const FUNC& func, const SASS_Bits& val) {
+        switch(func) {
+            case FUNC::RSImm: return SASS_Bits::cast(val, 32); 
+            case FUNC::UImm: return SASS_Bits::cast(val, 32); 
+            case FUNC::F16Imm: return SASS_Bits::cast(val, 16); 
+            case FUNC::SImm: return SASS_Bits::cast(val, 32); 
+            case FUNC::SSImm: return SASS_Bits::cast(val, 32); 
+            case FUNC::F64Imm: return SASS_Bits::cast(val, 64); 
+            case FUNC::F32Imm: return SASS_Bits::cast(val, 32); 
+            case FUNC::BITSET: return SASS_Bits::cast(val, 8); 
+            case FUNC::E8M7Imm: return SASS_Bits::cast(val, 16); 
+            case FUNC::E6M9Imm: return SASS_Bits::cast(val, 16);
+        }       
+    }
 }

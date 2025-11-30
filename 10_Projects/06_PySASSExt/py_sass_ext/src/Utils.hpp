@@ -20,7 +20,7 @@
 
 namespace SASS {
     using FArgString = std::string;
-    using FArgInt = int;
+    using FArgInt = int64_t;
     using FArgSASSBits = SASS_Bits;
     using FArgBool = bool;
     using FArgFloat = float;

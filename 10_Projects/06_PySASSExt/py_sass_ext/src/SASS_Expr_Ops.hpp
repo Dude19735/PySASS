@@ -10,6 +10,7 @@
 
 #include "SASS_Bits.hpp"
 #include "Utils.hpp"
+#include "SASS_Func.hpp"
 #include "TT_Terms.hpp"
 
 namespace SASS {
@@ -20,7 +21,7 @@ namespace SASS {
      *  - the TOp_.... structs aret the input pattern that is passed ot the operations functions
      *  - TOperationVAl can be empty if the value is the same as the string
      */
-    using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode>;
+    using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
 
     struct TOp_EncVals {
         TEncVals arg0;
@@ -331,17 +332,20 @@ namespace SASS {
 //         self.__TC_FF:typ.Callable
 //         self.__TC_FF = tc_ff
     class Op_TypeCast : public Op_Function {
+        Imm _func;
+
         FArgs tp_operation(const TOp_List_EncVals& args) {
             if(!args.arg0.size() == 1) throw std::runtime_error("Op_TypeCast requires TOp_List_EncVals with one thing in args.arg0");
             TOperationVal val = args.arg0.at(0);
-            int64_t ival = std::get<FArgInt>(val);
-            return  SASS_Bits::from_int(ival, 0, 0);
+            if(!std::holds_alternative<SASS_Bits>(val)) throw std::runtime_error("Op_TypeCast requires SASS_Bits as argument!");
+            SASS_Bits ival = std::get<SASS_Bits>(val);
+            return _func.__call__(ival);
         }
     public:
         Op_TypeCast(CONVERT_FUNC tc_ff) : Op_Function([this](const VArg& p) {
             if(!std::holds_alternative<TOp_List_EncVals>(p)) throw std::runtime_error(err_msg("Op_TypeCast", "TOp_List_EncVals"));
             return tp_operation(std::get<TOp_List_EncVals>(p));
-        }, CONVERT_FUNC_to_FUNC(tc_ff)) {}
+        }, CONVERT_FUNC_to_FUNC(tc_ff)), _func(CONVERT_FUNC_to_Obj(tc_ff)) {}
     };
     class Op_ConstBankAddress2 : public Op_Function {};
     class Op_ConstBankAddress0 : public Op_Function {};

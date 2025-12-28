@@ -201,7 +201,7 @@ if not 'GLOBAL__SERVER_LOAD_ALL' in locals(): GLOBAL__SERVER_LOAD_ALL = True
 
 if not 'CACHE__SM' in locals(): CACHE__SM = {}
 
-if not 'SWITCH__USE_TT_EXT' in locals(): SWITCH__USE_TT_EXT = True
+if not 'SWITCH__USE_TT_EXT' in locals(): SWITCH__USE_TT_EXT = False
 if not 'SWITCH__USE_OP_EXT' in locals(): SWITCH__USE_OP_EXT = False
 # if not 'SWITCH__USE_PROPS_EXT' in locals(): SWITCH__USE_PROPS_EXT = False
 

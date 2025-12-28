@@ -1,3 +1,4 @@
+import os
 from . import _sass_expression_ops as oo
 from . import _config as sp
 from ._sass_expression import SASS_Expr
@@ -14,8 +15,16 @@ It still works.
 class Isolator:
     @staticmethod
     def parse_sm(sm:int):
-        path = 'DocumentSASS/sm_'
-        name = '_instructions.txt.in'
+        # path = 'DocumentSASS/sm_'
+        # name = '_instructions.txt.in'
+        # instructions_txt = path + str(sm) + name
+        location = os.path.dirname(os.path.realpath(__file__))
+        log_path = location + '/DocumentSASS'
+        path = location + '/DocumentSASS/sm_'
+        name_s = '_instructions.txt'
+        name = name_s + '.in'
+
+        sm_xx = 'sm_{0}'.format(sm)
         instructions_txt = path + str(sm) + name
         result = SASS_Parser_Iter.parse(sm, instructions_txt)
 
@@ -57,7 +66,7 @@ class Isolator:
             else: res[k] = v
         return res
 
-if __name__ == '__main__':
+if __name__ == '__main__' or True:
     result, all_enc_inds, all_format, args = Isolator.parse_sm(50)
 
     e_str = '(2 == 1 + 1 && 2 == 6 % 4)'

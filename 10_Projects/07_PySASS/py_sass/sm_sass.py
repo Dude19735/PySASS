@@ -854,7 +854,9 @@ def test_list_operands(sass:SM_SASS):
         f.write("==========================\n")
         f.write(mem_access_patterns)
 
-if __name__ == '__main__' or True:
+from . import sass_expression_test_parse_and_eval
+
+if __name__ == '__main__':
     def dict_to_str(dd:dict):
         return {k:(v if 
                    isinstance(v, str|int|float) 
@@ -878,7 +880,7 @@ if __name__ == '__main__' or True:
     sass = {}
     sms = [50, 52, 53, 60, 61, 62, 70, 72, 75, 80, 86, 90, 100, 120]
     # sms = [120]
-    # sms = [86, 90, 100, 120]
+    sms = [86, 90, 100, 120]
     # sms = [50]
     # import time
     # import gzip

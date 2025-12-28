@@ -191,7 +191,12 @@ namespace SASS {
 
     enum class CONVERT_FUNC { F16Imm, F32Imm,  F64Imm,  E6M9Imm, E8M7Imm };
     enum class FIXED_BIT_FUNC { F16Imm, F32Imm, F64Imm, E6M9Imm, E8M7Imm };
-    enum class FUNC { RSImm, UImm, F16Imm, SImm, SSImm, F64Imm, F32Imm, BITSET, E8M7Imm, E6M9Imm };
+    enum class FREE_BIT_FUNC { SImm, SSImm, BITSET, RSImm, UImm };
+    enum class FUNC { 
+        RSImm, UImm, F16Imm, SImm, SSImm, F64Imm, F32Imm, BITSET, E8M7Imm, E6M9Imm,
+        // Cover the rest of it in the same enum, just because it's fun
+        ConstBankAddress2, ConstBankAddress0, IDENTICAL, convertFloatType, Reduce, INDEX, IsEven, IsOdd
+    };
 
     using TFunc = std::variant<RSImm, UImm, F16Imm, SImm, SSImm, F64Imm, F32Imm, BITSET, E8M7Imm, E6M9Imm>;
 
@@ -203,6 +208,8 @@ namespace SASS {
             case CONVERT_FUNC::E6M9Imm: return "E6M9Imm";
             case CONVERT_FUNC::E8M7Imm: return "E8M7Imm";
         }
+        
+        throw std::runtime_error("[CONVERT_FUNC_to_str] Unregistered CONVERT_FUNC. Cannot convert to string!");
     }
 
     std::string FIXED_BIT_FUNC_to_str(const FIXED_BIT_FUNC& val) {
@@ -213,6 +220,8 @@ namespace SASS {
             case FIXED_BIT_FUNC::E6M9Imm: return "E6M9Imm";
             case FIXED_BIT_FUNC::E8M7Imm: return "E8M7Imm";
         }
+
+        throw std::runtime_error("[FIXED_BIT_FUNC_to_str] Unregistered FIXED_BIT_FUNC. Cannot convert to string!");
     }
 
     std::string FUNC_to_str(const FUNC& val) {
@@ -227,7 +236,18 @@ namespace SASS {
             case FUNC::BITSET: return "BITSET"; 
             case FUNC::E8M7Imm: return "E8M7Imm"; 
             case FUNC::E6M9Imm: return "E6M9Imm";
+            // Cover the rest of it in the same enum, just because it's fun
+            case FUNC::ConstBankAddress2: return "ConstBankAddress2";
+            case FUNC::ConstBankAddress0: return "ConstBankAddress0";
+            case FUNC::IDENTICAL: return "IDENTICAL";
+            case FUNC::convertFloatType: return "convertFloatType";
+            case FUNC::Reduce: return "Reduce";
+            case FUNC::INDEX: return "INDEX";
+            case FUNC::IsEven: return "IsEven";
+            case FUNC::IsOdd: return "IsOdd";
         }
+
+        throw std::runtime_error("[FUNC_to_str] Unregistered FUNC. Cannot convert to string!");
     }
 
     FUNC CONVERT_FUNC_to_FUNC(CONVERT_FUNC val) {
@@ -238,6 +258,34 @@ namespace SASS {
             case CONVERT_FUNC::E6M9Imm: return FUNC::E6M9Imm;
             case CONVERT_FUNC::E8M7Imm: return FUNC::E8M7Imm;
         }
+
+        std::string func_name = CONVERT_FUNC_to_str(val);
+        throw std::runtime_error(std::vformat("[CONVERT_FUNC_to_FUNC] Cannot convert to FUNC: unsupported func type [{}]", std::make_format_args(func_name)));
+    }
+
+    Imm CONVERT_FUNC_to_Obj(CONVERT_FUNC func) {
+        switch(func) {
+            case CONVERT_FUNC::F16Imm: return F16Imm();
+            case CONVERT_FUNC::F32Imm: return F32Imm();
+            case CONVERT_FUNC::F64Imm: return F64Imm();
+            case CONVERT_FUNC::E6M9Imm: return E6M9Imm();
+            case CONVERT_FUNC::E8M7Imm: return E8M7Imm();
+        }
+
+        std::string func_name = CONVERT_FUNC_to_str(func);
+        throw std::runtime_error(std::vformat("[CONVERT_FUNC_to_Obj] Cannot convert to Object: unsupported func type [{}]", std::make_format_args(func_name)));
+    }
+
+    Imm FIXED_BIT_FUNC_to_Obj(FIXED_BIT_FUNC val) {
+        switch(val) {
+            case FIXED_BIT_FUNC::F16Imm: return F16Imm();
+            case FIXED_BIT_FUNC::F32Imm: return F32Imm();
+            case FIXED_BIT_FUNC::F64Imm: return F64Imm();
+            case FIXED_BIT_FUNC::E6M9Imm: return E6M9Imm();
+            case FIXED_BIT_FUNC::E8M7Imm: return E8M7Imm();
+        }
+        std::string func_name = FIXED_BIT_FUNC_to_str(val);
+        throw std::runtime_error(std::vformat("[FIXED_BIT_FUNC_to_Obj] Cannot convert to Object: unsupported func type [{}]", std::make_format_args(func_name)));
     }
 
     FUNC FIXED_BIT_FUNC_to_FUNC(FIXED_BIT_FUNC val) {
@@ -248,20 +296,69 @@ namespace SASS {
             case FIXED_BIT_FUNC::E6M9Imm: return FUNC::E6M9Imm;
             case FIXED_BIT_FUNC::E8M7Imm: return FUNC::E8M7Imm;
         }
+
+        std::string func_name = FIXED_BIT_FUNC_to_str(val);
+        throw std::runtime_error(std::vformat("[FIXED_BIT_FUNC_to_FUNC] Cannot convert to FUNC: unsupported func type [{}]", std::make_format_args(func_name)));
     }
 
-    SASS_Bits cast(const FUNC& func, const SASS_Bits& val) {
+    bool FUNC_is_FIXED_BIT_FUNC(FUNC func){
         switch(func) {
-            case FUNC::RSImm: return SASS_Bits::cast(val, 32); 
-            case FUNC::UImm: return SASS_Bits::cast(val, 32); 
-            case FUNC::F16Imm: return SASS_Bits::cast(val, 16); 
-            case FUNC::SImm: return SASS_Bits::cast(val, 32); 
-            case FUNC::SSImm: return SASS_Bits::cast(val, 32); 
-            case FUNC::F64Imm: return SASS_Bits::cast(val, 64); 
-            case FUNC::F32Imm: return SASS_Bits::cast(val, 32); 
-            case FUNC::BITSET: return SASS_Bits::cast(val, 8); 
-            case FUNC::E8M7Imm: return SASS_Bits::cast(val, 16); 
-            case FUNC::E6M9Imm: return SASS_Bits::cast(val, 16);
-        }       
+            case FUNC::F16Imm: return true;
+            case FUNC::F32Imm: return true;
+            case FUNC::F64Imm: return true;
+            case FUNC::E6M9Imm: return true;
+            case FUNC::E8M7Imm: return true;
+            default: return false;
+        }
     }
+
+    bool FUNC_is_FREE_BIT_FUNC(FUNC func) {
+        switch(func) {
+            case FUNC::SImm: return true;
+            case FUNC::SSImm: return true;
+            case FUNC::BITSET: return true;
+            case FUNC::RSImm: return true;
+            case FUNC::UImm: return true;
+            default: return false;
+        }
+    }
+
+    std::string FREE_BIT_FUNC_to_str(const FREE_BIT_FUNC& val) {
+        switch(val) {
+            case FREE_BIT_FUNC::SImm: return "SImm";
+            case FREE_BIT_FUNC::SSImm: return "SSImm";
+            case FREE_BIT_FUNC::BITSET: return "BITSET";
+            case FREE_BIT_FUNC::RSImm: return "RSImm";
+            case FREE_BIT_FUNC::UImm: return "UImm";
+        }
+
+        throw std::runtime_error("[FREE_BIT_FUNC_to_Str] Unregistered FREE_BIT_FUNC. Cannot convert to string!");
+    }
+
+    Imm FREE_BIT_FUNC_to_Obj(FREE_BIT_FUNC val, int bit_len) {
+        switch(val) {
+            case FREE_BIT_FUNC::SImm: return SImm(bit_len);
+            case FREE_BIT_FUNC::SSImm: return SSImm(bit_len);
+            case FREE_BIT_FUNC::BITSET: return BITSET(bit_len);
+            case FREE_BIT_FUNC::RSImm: return RSImm(bit_len);
+            case FREE_BIT_FUNC::UImm: return UImm(bit_len);
+        }
+        std::string func_name = FREE_BIT_FUNC_to_str(val);
+        throw std::runtime_error(std::vformat("[FIXED_BIT_FUNC_to_Obj] Cannot convert to Object: unsupported func type [{}]", std::make_format_args(func_name)));
+    }
+
+    // SASS_Bits cast(const FUNC& func, const SASS_Bits& val) {
+    //     switch(func) {
+    //         case FUNC::RSImm: return SASS_Bits::cast(val, 32); 
+    //         case FUNC::UImm: return SASS_Bits::cast(val, 32); 
+    //         case FUNC::F16Imm: return SASS_Bits::cast(val, 16); 
+    //         case FUNC::SImm: return SASS_Bits::cast(val, 32); 
+    //         case FUNC::SSImm: return SASS_Bits::cast(val, 32); 
+    //         case FUNC::F64Imm: return SASS_Bits::cast(val, 64); 
+    //         case FUNC::F32Imm: return SASS_Bits::cast(val, 32); 
+    //         case FUNC::BITSET: return SASS_Bits::cast(val, 8); 
+    //         case FUNC::E8M7Imm: return SASS_Bits::cast(val, 16); 
+    //         case FUNC::E6M9Imm: return SASS_Bits::cast(val, 16);
+    //     }       
+    // }
 }

@@ -878,7 +878,7 @@ if __name__ == '__main__':
     # we only want to test the parser
     # sp.TEST__MOCK_INSTRUCTIONS = False
     sass = {}
-    sms = [50, 52, 53, 60, 61, 62, 70, 72, 75, 80, 86, 90, 100, 120]
+    # sms = [50, 52, 53, 60, 61, 62, 70, 72, 75, 80, 86, 90, 100, 120]
     # sms = [120]
     sms = [86, 90, 100, 120]
     # sms = [50]
@@ -889,7 +889,7 @@ if __name__ == '__main__':
     conditions_count = []
     for sm in sms:
         # t0 = time.time()
-        sass = SM_SASS(sm, reparse=True, finalize=True, opcode_gen=True, lookup_gen=True, web_crawl=False, collect_statistics=False)
+        sass = SM_SASS(sm, reparse=False, finalize=True, opcode_gen=False, lookup_gen=False, web_crawl=False, collect_statistics=False)
         # sass = SM_SASS(sm, reparse=False, finalize=False, opcode_gen=False, lookup_gen=False, web_crawl=False, collect_statistics=False)
         # jj = sass.lu_to_json()
         pass

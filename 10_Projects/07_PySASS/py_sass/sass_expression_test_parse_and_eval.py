@@ -3,6 +3,7 @@ from . import _sass_expression_ops as oo
 from . import _config as sp
 from ._sass_expression import SASS_Expr
 from ._tt_instruction import TT_Instruction
+from ._tt_terms import TT_Func, TT_FuncArg, TT_Alias
 from py_sass_ext import SASS_Bits
 from .sass_parser_iter import SASS_Parser_Iter
 from .sm_cu_details import SM_Cu_Details
@@ -68,6 +69,51 @@ class Isolator:
 
 if __name__ == '__main__' or True:
     result, all_enc_inds, all_format, args = Isolator.parse_sm(50)
+
+    e_str = 'ConstBankAddress2(constBank,immConstOffset)'
+    expr:SASS_Expr = SASS_Expr(e_str, *args)
+
+    constBank_arg_default = TT_FuncArg(class_name='imaginary', arg_val='5/0*')
+    constBank_alias = TT_Alias(class_name='imaginary', alias='constBank', is_at_alias=False)
+    options = {'RSImm', 'SSImm', 'UImm', 'F32Imm', 'BITSET', 'F64Imm', 'F16Imm', 'SImm'}
+    constBank_func = TT_Func(class_name="imaginary", func_name='UImm', alias=constBank_alias, arg_default=constBank_arg_default, options=options, star=False)
+    
+    immConstOffset_arg_default = TT_FuncArg(class_name='imaginary', arg_val='17/0')
+    immConstOffset_alias = TT_Alias(class_name='imaginary', alias='immConstOffset', is_at_alias=False)
+    immConstOffset_func = TT_Func(class_name="imaginary", func_name='SImm', alias=immConstOffset_alias, arg_default=immConstOffset_arg_default, options=options, star=True)
+
+    # class_name:str, func_name:str, alias:TT_Alias, arg_default:TT_FuncArg, options:set, star:bool
+    eval_alias = Isolator.unpack_args( {"constBank": constBank_func, "immConstOffset": immConstOffset_func})
+    expr, evaled = expr.finalize(eval_alias)
+    
+    enc_vals = Isolator.unpack_args( {"constBank": SASS_Bits.from_int(val=0, bit_len=5, signed=0), "immConstOffset": SASS_Bits.from_int(val=8, bit_len=17, signed=1)})
+    res = expr(enc_vals)
+    # f = (oo.Op_LBrace, oo.Op_Int, oo.Op_Equal, oo.Op_Int, oo.Op_Plus, oo.Op_Int, oo.Op_And, oo.Op_Int, oo.Op_Equal, oo.Op_Int, oo.Op_Mod, oo.Op_Int, oo.Op_RBrace)
+    assert(res == [SASS_Bits.from_int(val=0, bit_len=5, signed=0), SASS_Bits.from_int(val=2, bit_len=14, signed=0)])
+    assert(expr.preorder_str == 'ConstBankAddress2 [ constBank ] [ immConstOffset ]')
+
+    # C:srcConst[UImm(5/0*):constBank]* [NonZeroRegisterFAU:Ra + SImm(17/0)*:sImm]
+    e_str = 'ConstBankAddress0(constBank,sImm)'
+    expr:SASS_Expr = SASS_Expr(e_str, *args)
+
+    constBank_arg_default = TT_FuncArg(class_name='imaginary', arg_val='5/0*')
+    constBank_alias = TT_Alias(class_name='imaginary', alias='constBank', is_at_alias=False)
+    options = {'RSImm', 'SSImm', 'UImm', 'F32Imm', 'BITSET', 'F64Imm', 'F16Imm', 'SImm'}
+    constBank_func = TT_Func(class_name="imaginary", func_name='UImm', alias=constBank_alias, arg_default=constBank_arg_default, options=options, star=False)
+    
+    sImm_arg_default = TT_FuncArg(class_name='imaginary', arg_val='17/0')
+    sImm_alias = TT_Alias(class_name='imaginary', alias='sImm', is_at_alias=False)
+    sImm_func = TT_Func(class_name="imaginary", func_name='SImm', alias=sImm_alias, arg_default=sImm_arg_default, options=options, star=True)
+
+    # class_name:str, func_name:str, alias:TT_Alias, arg_default:TT_FuncArg, options:set, star:bool
+    eval_alias = Isolator.unpack_args( {"constBank": constBank_func, "sImm": sImm_func})
+    expr, evaled = expr.finalize(eval_alias)
+    
+    enc_vals = Isolator.unpack_args( {"constBank": SASS_Bits.from_int(val=0, bit_len=5, signed=0), "sImm": SASS_Bits.from_int(val=8, bit_len=17, signed=1)})
+    res = expr(enc_vals)
+    # f = (oo.Op_LBrace, oo.Op_Int, oo.Op_Equal, oo.Op_Int, oo.Op_Plus, oo.Op_Int, oo.Op_And, oo.Op_Int, oo.Op_Equal, oo.Op_Int, oo.Op_Mod, oo.Op_Int, oo.Op_RBrace)
+    assert(res == [SASS_Bits.from_int(val=0, bit_len=5, signed=0), SASS_Bits.from_int(val=8, bit_len=16, signed=0)])
+    assert(expr.preorder_str == 'ConstBankAddress0 [ constBank ] [ sImm ]')
 
     e_str = '(2 == 1 + 1 && 2 == 6 % 4)'
     expr:SASS_Expr = SASS_Expr(e_str, *args)

@@ -318,19 +318,6 @@ namespace SASS {
         std::string __str__() const { return std::string("`") + Op_Operand::__str__(); }
     };
 
-    /// @brief All function-like op token classes
-// class Op_TypeCast(Op_Function):
-//     """If we have a convertFloatType, this one will be the first argument, containing the type things get typecasted to."""
-//     A=sp.EXPR_OP_ASSOCIATIV_GROUP_FUNCTION
-//     P=sp.EXPR_OP_PRECEDENCE_NR_FUNCTION
-//     def operation_cast(self, args, enc_vals:dict) -> SASS_Bits:
-//         if not len(args) == 1: raise Exception(sp.CONST__ERROR_UNEXPECTED)
-//         return self.__TC_FF(args[0])
-//     def __init__(self, tc_ff:F16Imm|F32Imm|F64Imm|E6M9Imm|E8M7Imm): 
-//         if not (type(tc_ff) in _sass_func.CONVERT_FUNC.values()): raise Exception(sp.CONST__ERROR_UNEXPECTED)
-//         super().__init__(self.operation_cast, str(tc_ff))
-//         self.__TC_FF:typ.Callable
-//         self.__TC_FF = tc_ff
     class Op_TypeCast : public Op_Function {
         Imm _func;
 
@@ -347,8 +334,32 @@ namespace SASS {
             return tp_operation(std::get<TOp_List_EncVals>(p));
         }, CONVERT_FUNC_to_FUNC(tc_ff)), _func(CONVERT_FUNC_to_Obj(tc_ff)) {}
     };
-    class Op_ConstBankAddress2 : public Op_Function {};
-    class Op_ConstBankAddress0 : public Op_Function {};
+    class Op_ConstBankAddress2 : public Op_Function {
+        FArgs operation_p(const TOp_Var_Var& args) {
+            SASS_Bits arg1 = std::get<SASS_Bits>(args.arg0);
+            SASS_Bits arg2 = std::get<SASS_Bits>(args.arg1);
+            // 1st arg is UImm => unsigned
+            if(arg1.signed_()) throw std::runtime_error("Op_ConstBankAddress2 requires arg1 to be unsigned");
+            // 2nd arg is SImm => signed
+            if(!arg2.signed_()) throw std::runtime_error("Op_ConstBankAddress2 requires arg2 to be signed");
+            // we are going to shave off the trailing 2 bits with SCALE => they both have to be 0
+            if(SASS_Bits::__eq__(SASS_Bits::__and__(arg2, SASS_Bits(BitVector({1,1}), 3, false)), SASS_Bits::from_int(0)))  throw std::runtime_error("Op_ConstBankAddress2 requires two lsb to be 0"); 
+
+            // With constBankAddress2 we want to assign a full immediate value for an address, like in
+            //   [-] C:srcConst[UImm(5/0*):constBank]* [SImm(17)*:immConstOffset]
+            // But in the encoding portion
+            //   Bcbank,Bcaddr =  ConstBankAddress2(constBank,immConstOffset);
+            // Bcaddr usually has 3 fewer bits (immConstOffset has 17 bits, Bcaddr only 14 bits)
+            // Since arg2 is an address, it's rightmost bits are 0. It also has to be a signed value.
+            //  => apply "SCALE 4" (shave off trailing 2 bits)
+            //  => apply "to_unsigned" (shave off leading bit)
+            SASS_Bits arg2_a = SASS_Bits::to_unsigned(SASS_Bits::scale(arg2, 2));
+            return std::array<SASS_Bits, 2>({arg1, arg2});
+        }
+    };
+    class Op_ConstBankAddress0 : public Op_Function {
+
+    };
     class Op_Identical : public Op_Function {};
     class Op_convertFloatType : public Op_Function {};
     class Op_Reduce : public Op_Function {};

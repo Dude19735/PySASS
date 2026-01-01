@@ -25,7 +25,7 @@ namespace SASS {
     using FArgBool = bool;
     using FArgFloat = float;
     using FArgSet = std::set<std::string>;
-    using FArgs = std::variant<FArgInt, FArgSASSBits, FArgBool, FArgSet, FArgString, FArgFloat>;
+    using FArgs = std::variant<FArgInt, FArgSASSBits, FArgBool, FArgSet, FArgString, FArgFloat, std::array<SASS_Bits, 2>>;
 
     // using TConvertVariant = std::variant<FArgInt, FArgFloat, FArgBool, FArgString>;
     using TDomain = std::variant<std::set<SASS_Bits>, SASS_Range>;

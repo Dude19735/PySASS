@@ -353,16 +353,125 @@ namespace SASS {
             // Since arg2 is an address, it's rightmost bits are 0. It also has to be a signed value.
             //  => apply "SCALE 4" (shave off trailing 2 bits)
             //  => apply "to_unsigned" (shave off leading bit)
-            SASS_Bits arg2_a = SASS_Bits::to_unsigned(SASS_Bits::scale(arg2, 2));
-            return std::array<SASS_Bits, 2>({arg1, arg2});
+            SASS_Bits arg2_a = SASS_Bits::to_unsigned(SASS_Bits::scale(arg2, 4));
+            return std::array<SASS_Bits, 2>({arg1, arg2_a});
         }
+    public:
+        Op_ConstBankAddress2() : Op_Function([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_ConstBankAddress2", "TOp_Var_Var"));
+            return operation_p(std::get<TOp_Var_Var>(p));
+        }, FUNC::ConstBankAddress2) {}
     };
     class Op_ConstBankAddress0 : public Op_Function {
+        FArgs operation_p(const TOp_Var_Var& args) {
+            SASS_Bits arg1 = std::get<SASS_Bits>(args.arg0);
+            SASS_Bits arg2 = std::get<SASS_Bits>(args.arg1);
+            // 1st arg is UImm => unsigned
+            if(arg1.signed_()) throw std::runtime_error("Op_ConstBankAddress2 requires arg1 to be unsigned");
+            // 2nd arg is SImm => signed
+            if(!arg2.signed_()) throw std::runtime_error("Op_ConstBankAddress2 requires arg2 to be signed");
+            // we are going to shave off the trailing 2 bits with SCALE => they both have to be 0
+            if(SASS_Bits::__eq__(SASS_Bits::__and__(arg2, SASS_Bits(BitVector({1,1}), 3, false)), SASS_Bits::from_int(0)))  throw std::runtime_error("Op_ConstBankAddress2 requires two lsb to be 0"); 
 
+            // With constBankAddress2 we want to assign a full immediate value for an address, like in
+            //   [-] C:srcConst[UImm(5/0*):constBank]* [SImm(17)*:immConstOffset]
+            // But in the encoding portion
+            //   Bcbank,Bcaddr =  ConstBankAddress0(constBank,immConstOffset);
+            // Bcaddr usually has 3 fewer bits (immConstOffset has 17 bits, Bcaddr only 16 bits)
+            // Since arg2 is an address, it has to be a signed value.
+            //  => apply "to_unsigned" (shave off leading bit)
+            SASS_Bits arg2_a = SASS_Bits::to_unsigned(arg2);
+            return std::array<SASS_Bits, 2>({arg1, arg2_a});
+        }
+        Op_ConstBankAddress0() : Op_Function([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_ConstBankAddress0", "TOp_Var_Var"));
+            return operation_p(std::get<TOp_Var_Var>(p));
+        }, FUNC::ConstBankAddress0) {}
     };
-    class Op_Identical : public Op_Function {};
-    class Op_convertFloatType : public Op_Function {};
-    class Op_Reduce : public Op_Function {};
+    class Op_Identical : public Op_Function {
+        FArgs operation_p(const TOp_Var_Var& args) {
+            SASS_Bits arg1 = std::get<SASS_Bits>(args.arg0);
+            SASS_Bits arg2 = std::get<SASS_Bits>(args.arg1);
+            // Dest = IDENTICAL(Rd,Rc); means, we select one of them and assign it to both. Both args must be the same
+            if(!SASS_Bits::__eq__(arg1, arg2)) throw std::runtime_error("Op_Identical requires arg1 == arg2");
+            return arg1;
+        }
+    public:
+        Op_Identical() : Op_Function([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Identical", "TOp_Var_Var"));
+            return operation_p(std::get<TOp_Var_Var>(p));
+        }, FUNC::IDENTICAL) {}
+    };
+    class Op_convertFloatType : public Op_Function {
+        // args = [
+        //   True, <py_sass_ext._sass_values.SASS_Bits object at 0x752f6244f9f0>,
+        //   False, <py_sass_ext._sass_values.SASS_Bits object at 0x752f6244f970>,
+        //   <py_sass_ext._sass_values.SASS_Bits object at 0x752f6244f8b0>
+        // ]
+        FArgs operation_convert(const TOp_List_EncVals& args) {
+            const std::vector<TOperationVal> arg0 = args.arg0;
+            size_t index = 0;
+            size_t len = arg0.size()-1;
+            for(size_t i=0; i<len; i+=2){
+                TOperationVal p = arg0.at(i);
+                if(!std::holds_alternative<bool>(p)) throw std::runtime_error("TOp_List_EncVals in Op_convertFloatType needs booleans for 0, 2, 4, ... indices");
+                bool pp = std::get<bool>(p);
+                if(pp) {
+                    size_t xx = 2*i+1;
+                    if(!std::holds_alternative<SASS_Bits>(arg0.at(xx))) throw std::runtime_error("TOp_List_EncVals in Op_convertFloatType needs SASS_Bits for 1, 3, 5, ... indices");
+                    return std::get<SASS_Bits>(arg0.at(2*i+1));
+                }
+            }
+        }
+    public:
+        Op_convertFloatType() : Op_Function([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_List_EncVals>(p)) throw std::runtime_error(err_msg("Op_convertFloatType", "TOp_List_EncVals"));
+            return operation_convert(std::get<TOp_List_EncVals>(p));
+        }, FUNC::convertFloatType) {}
+    };
+
+    class Op_Reduce : public Op_Function {
+        FUNC _reduce_op;
+        // A=sp.EXPR_OP_ASSOCIATIV_GROUP_FUNCTION
+        // P=sp.EXPR_OP_PRECEDENCE_NR_FUNCTION
+        // def operation_reduce(self, args, enc_vals:dict) -> SASS_Bits|int|bool:
+        //     if not len(args) >= 2: raise Exception(sp.CONST__ERROR_UNEXPECTED)
+        //     if not isinstance(self.reduce_op, Op_DualOperator): raise Exception(sp.CONST__ERROR_UNEXPECTED)
+        //     op:Op_DualOperator = self.reduce_op
+        //     cur:SASS_Bits|int|bool = args[0]
+        //     for p in args[1:]:
+        //         cur = op.op(cur, p) # type: ignore
+        //     return cur
+        // def __init__(self): 
+        //     super().__init__(self.operation_reduce, 'Reduce')
+        //     self.reduce_op = None
+        // def set_reduce_op(self, op): self.reduce_op = op
+        // def __str__(self): return Op_Function.__str__(self) + (('(' + str(self.reduce_op) + ')') if self.reduce_op is not None else '')
+        FArgs operation_reduce(const TOp_List_EncVals& args) {
+            const std::vector<TOperationVal> arg0 = args.arg0;
+            if(arg0.size() < 2)  throw std::runtime_error("TOp_List_EncVals in Op_Reduce needs at least two entries!");
+            if(!std::holds_alternative<Op_DualOperator>(arg0.at(0))) throw std::runtime_error("TOp_List_EncVals  in Op_Reduce nees the first entry to be an Op_DualOperator!");
+            
+            size_t index = 0;
+            size_t len = arg0.size()-1;
+            for(size_t i=0; i<len; i+=2){
+                TOperationVal p = arg0.at(i);
+                if(!std::holds_alternative<bool>(p)) throw std::runtime_error("TOp_List_EncVals in Op_convertFloatType needs booleans for 0, 2, 4, ... indices");
+                bool pp = std::get<bool>(p);
+                if(pp) {
+                    size_t xx = 2*i+1;
+                    if(!std::holds_alternative<SASS_Bits>(arg0.at(xx))) throw std::runtime_error("TOp_List_EncVals in Op_convertFloatType needs SASS_Bits for 1, 3, 5, ... indices");
+                    return std::get<SASS_Bits>(arg0.at(2*i+1));
+                }
+            }
+        }
+        public:
+            Op_Reduce() : Op_Function([this](const VArg& p) {
+                if(!std::holds_alternative<TOp_List_EncVals>(p)) throw std::runtime_error(err_msg("Op_Reduce", "TOp_List_EncVals"));
+                return operation_reduce(std::get<TOp_List_EncVals>(p));
+            }, FUNC::Reduce), _reduce_op(FUNC::) {}
+            void set_reduce(const FUNC op) { }
+    };
     class Op_Table : public Op_Function {};
     class Op_Identical : public Op_Function {};
     class Op_Index : public Op_Function {};

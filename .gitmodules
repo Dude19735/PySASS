@@ -1,1 +1,4 @@
 
+[submodule "10_Projects/06_PySASSExt/nanobind"]
+	path = 10_Projects/06_PySASSExt/nanobind
+	url = https://github.com/wjakob/nanobind

@@ -200,6 +200,24 @@ namespace SASS {
 
     using TFunc = std::variant<RSImm, UImm, F16Imm, SImm, SSImm, F64Imm, F32Imm, BITSET, E8M7Imm, E6M9Imm>;
 
+    FIXED_BIT_FUNC STR_TO_FIXED_BIT_FUNC(const std::string& str) {
+        if(str.compare(func_fb_F16Imm) == 0) return FIXED_BIT_FUNC::F16Imm;
+        else if(str.compare(func_fb_F32Imm) == 0) return FIXED_BIT_FUNC::F32Imm;
+        else if(str.compare(func_fb_F64Imm) == 0) return FIXED_BIT_FUNC::F64Imm;
+        else if(str.compare(func_fb_E6M9Imm) == 0) return FIXED_BIT_FUNC::E6M9Imm;
+        else if(str.compare(func_fb_E8M7Imm) == 0) return FIXED_BIT_FUNC::E8M7Imm;
+        else throw std::invalid_argument(std::vformat("[STR_TO_FIXED_BIT_FUNC] Unrecognized function name [{}]", std::make_format_args(str)));
+    }
+
+    FREE_BIT_FUNC STR_TO_FREE_BIT_FUNC(const std::string& str) {
+        if(str.compare(func_SImm) == 0) return FREE_BIT_FUNC::SImm;
+        else if(str.compare(func_SSImm) == 0) return FREE_BIT_FUNC::SSImm;
+        else if(str.compare(func_BITSET) == 0) return FREE_BIT_FUNC::BITSET;
+        else if(str.compare(func_RSImm) == 0) return FREE_BIT_FUNC::RSImm;
+        else if(str.compare(func_UImm) == 0) return FREE_BIT_FUNC::UImm;
+        else throw std::invalid_argument(std::vformat("[STR_TO_FREE_BIT_FUNC] Unrecognized function name [{}]", std::make_format_args(str)));
+    }
+
     std::string CONVERT_FUNC_to_str(const CONVERT_FUNC& val) {
         switch(val) {
             case CONVERT_FUNC::F16Imm: return "F16Imm";

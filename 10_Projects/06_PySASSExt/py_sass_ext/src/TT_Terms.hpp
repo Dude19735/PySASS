@@ -266,22 +266,32 @@ namespace SASS {
         Imm _func;
 
         static Imm _init_func(const TT_Func& func, const std::string& func_name) {
-            if(FIXED_BIT_FUNC.find(func_name) != FIXED_BIT_FUNC.end()){
-                if(func_name.compare(func_fb_F16Imm) == 0) return F16Imm();
-                else if(func_name.compare(func_fb_F32Imm) == 0) return F32Imm();
-                else if(func_name.compare(func_fb_F64Imm) == 0) return F64Imm();
-                else if(func_name.compare(func_fb_E6M9Imm) == 0) return E6M9Imm();
-                else if(func_name.compare(func_fb_E8M7Imm) == 0) return E8M7Imm();
-                else throw std::runtime_error("TFunc: unkonwn function name!");
+            bool ok = false;
+            try {
+                FIXED_BIT_FUNC x = STR_TO_FIXED_BIT_FUNC(func_name);
+                ok = true;
+                if(x == FIXED_BIT_FUNC::F16Imm) return F16Imm();
+                else if(x == FIXED_BIT_FUNC::F32Imm) return F32Imm();
+                else if(x == FIXED_BIT_FUNC::F64Imm) return F64Imm();
+                else if(x == FIXED_BIT_FUNC::E6M9Imm) return E6M9Imm();
+                else if(x == FIXED_BIT_FUNC::E8M7Imm) return E8M7Imm();
+            } catch(const std::invalid_argument& e){
+                ok = false;
             }
-            else {
-                if(func_name.compare(func_SImm) == 0) return SImm(TT_FuncArg::bit_len(func._arg_default));
-                else if(func_name.compare(func_SSImm) == 0) return SSImm(TT_FuncArg::bit_len(func._arg_default));
-                else if(func_name.compare(func_BITSET) == 0) return BITSET(TT_FuncArg::bit_len(func._arg_default));
-                else if(func_name.compare(func_RSImm) == 0) return RSImm(TT_FuncArg::bit_len(func._arg_default));
-                else if(func_name.compare(func_UImm) == 0) return UImm(TT_FuncArg::bit_len(func._arg_default));
-                else throw std::runtime_error("TFunc: unkonwn function name!");
+
+            try {
+                FREE_BIT_FUNC x = STR_TO_FREE_BIT_FUNC(func_name);
+                ok = true;
+                if(x == FREE_BIT_FUNC::SImm) return SImm(TT_FuncArg::bit_len(func._arg_default));
+                else if(x == FREE_BIT_FUNC::SSImm) return SSImm(TT_FuncArg::bit_len(func._arg_default));
+                else if(x == FREE_BIT_FUNC::BITSET) return BITSET(TT_FuncArg::bit_len(func._arg_default));
+                else if(x == FREE_BIT_FUNC::RSImm) return RSImm(TT_FuncArg::bit_len(func._arg_default));
+                else if(x == FREE_BIT_FUNC::UImm) return UImm(TT_FuncArg::bit_len(func._arg_default));
+            } catch(const std::invalid_argument& e){
+                if(!ok) throw std::runtime_error("TFunc: unkonwn function name!");
             }
+
+            throw std::runtime_error("TFunc: unkonwn function name!");
         }
     public:
         TT_Func(const std::string& func_name, const TStrOptionsSet& options, const TT_FuncArg& arg_default, bool star, bool is_address, const TT_Alias& alias) noexcept 

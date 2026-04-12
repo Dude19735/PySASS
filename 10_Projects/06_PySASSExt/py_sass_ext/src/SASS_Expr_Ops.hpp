@@ -21,7 +21,7 @@ namespace SASS {
      *  - the TOp_.... structs aret the input pattern that is passed ot the operations functions
      *  - TOperationVAl can be empty if the value is the same as the string
      */
-    using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+    using TOperationVal = std::variant<std::monostate, FArgInt, FArgBool, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
 
     struct TOp_EncVals {
         TEncVals arg0;
@@ -430,8 +430,916 @@ namespace SASS {
         }, FUNC::convertFloatType) {}
     };
 
+    /// @brief Dual op token classes
+    class Op_Minus : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_Minus() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Minus", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__sub__sb(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 - arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(static_cast<FArgInt>(arg0) - static_cast<FArgInt>(arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__add__b(SASS_Bits::__neg__(arg1), arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__sub__i(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__add__b(SASS_Bits::__neg__(arg1), arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__sub__b(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_Minus requires both arguments to be of the same type, either SASS_Bits or FArgInt");
+            }
+        }, "-") {}
+    };
+    class Op_Plus : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_Plus() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Plus", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__add__sb(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 + arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(static_cast<FArgInt>(arg0) + static_cast<FArgInt>(arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__add__b(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__add__i(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__add__b(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__add__b(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_Plus requires both arguments to be of the same type, either SASS_Bits or FArgInt");
+            }
+        }, "+") {}
+    };
+    class Op_Mult : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        // using FArgs = std::variant<FArgInt, FArgSASSBits, FArgBool, FArgSet, FArgString, FArgFloat, std::array<SASS_Bits, 2>>;
+        Op_Mult() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Mult", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__mul__sb(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 * arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(static_cast<FArgInt>(arg0) * static_cast<FArgInt>(arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__mul__i(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__mul__i(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__mul__b(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__mul__b(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_Mult requires both arguments to be of the same type, either SASS_Bits or FArgInt");
+            }
+        }, "*") {}
+    };
+    class Op_Mod : public Op_DualOperator {
+        public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_Mod() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Mod", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__mod__sb(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 % arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(static_cast<FArgInt>(arg0) % static_cast<FArgInt>(arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_Mod does not support first arg FArgInt and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__mod__i(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_Mod does not support first arg FArgBool and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__mod__b(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Invlalid argument types for Op_Mod");
+            }
+        }, "%") {}
+    };
+    class Op_Div : public Op_DualOperator {
+        public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_Div() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Div", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__floordiv__sb(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 / arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(static_cast<FArgInt>(arg0) / static_cast<FArgInt>(arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_Div does not support first arg FArgInt and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__floordiv__i(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_Div does not support first arg FArgBool and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__floordiv__b(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Invalid argument types for Op_Div");
+            }
+        }, "/") {}
+    };
+    class Op_NotEqual : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_NotEqual() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_NotEqual", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(!SASS_Bits::__ne__sb(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 != arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 != arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(!SASS_Bits::__ne__i(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(!SASS_Bits::__ne__i(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(!SASS_Bits::__ne__b(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(!SASS_Bits::__ne__b(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_NotEqual requires both arguments to be of the same type, either SASS_Bits or FArgInt or FArgBool");
+            }
+        }, "!=") {}
+    };
+    class Op_BXor : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_BXor() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_BXor", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__xor__(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 ^ arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 ^ arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__xor__(arg1, SASS_Bits::from_int(arg0)));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__xor__(arg0, SASS_Bits::from_int(arg1)));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__xor__(arg1, SASS_Bits::from_int(arg0)));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__xor__(arg0, SASS_Bits::from_int(arg1)));
+            }
+            else {
+                throw std::runtime_error("Op_BXor requires both arguments to be of the same type, either SASS_Bits or FArgInt or FArgBool");
+            }
+        }, "^") {}
+    };
+    class Op_And : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_And() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_And", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_And does not support SASS_Bits arguments");
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 && arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 && arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_And does not support first arg FArgInt and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                throw std::runtime_error("Op_And does not support first arg SASS_Bits and second arg FArgInt");
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_And does not support first arg FArgBool and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                throw std::runtime_error("Op_And does not support first arg SASS_Bits and second arg FArgBool");
+            }
+            else {
+                throw std::runtime_error("Op_And invalid arg types");
+            }
+        }, "&&") {}
+    };
+    class Op_SmallerOrEqual : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_SmallerOrEqual() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_SmallerOrEqual", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__le__sb(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 <= arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 <= arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__ge__i(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__le__i(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__ge__b(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__le__b(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_SmallerOrEqual requires both arguments to be of the same type, either SASS_Bits or FArgInt or FArgBool");
+            }
+        }, "<=") {}
+    };
+    class Op_Smaller : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_Smaller() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Smaller", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__lt__sb(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 < arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 < arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__gt__i(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__lt__i(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__gt__b(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__lt__b(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_Smaller requires both arguments to be of the same type, either SASS_Bits or FArgInt or FArgBool");
+            }
+        }, "<") {}
+    };
+    class Op_GreaterOrEqual : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_GreaterOrEqual() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_GreaterOrEqual", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__ge__sb(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 >= arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 >= arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__le__i(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__ge__i(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__le__b(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__ge__b(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_SmallerOrEqual requires both arguments to be of the same type, either SASS_Bits or FArgInt or FArgBool");
+            }
+        }, "<=") {}
+    };
+    class Op_Greater : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_Greater() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Greater", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__gt__sb(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 > arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 > arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__lt__i(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__gt__i(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__lt__b(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__gt__b(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_Greater requires both arguments to be of the same type, either SASS_Bits or FArgInt or FArgBool");
+            }
+        }, ">=") {}
+    };
+    class Op_LShift : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_LShift() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_LShift", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_LShift does not support SASS_Bits as arguments");
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 << arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 << arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_LShift does not support first arg FArgInt and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__lshift__(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_LShift does not support first arg FArgBool and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__lshift__(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_LShift requires both arguments to be of the same type, either SASS_Bits or FArgInt or FArgBool");
+            }
+        }, "<<") {}
+    };
+    class Op_RShift : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_RShift() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_RShift", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_RShift does not support SASS_Bits as arguments");
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 >> arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 >> arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_RShift does not support first arg FArgInt and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__rshift__(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_RShift does not support first arg FArgBool and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__rshift__(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_RShift requires both arguments to be of the same type, either SASS_Bits or FArgInt or FArgBool");
+            }
+        }, ">>") {}
+    };
+    class Op_BAnd : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_BAnd() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_BAnd", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__and__(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 & arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 & arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_BAnd does not support first arg FArgInt and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__and__(arg0, SASS_Bits::from_int(arg1)));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_BAnd does not support first arg FArgBool and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__and__(arg0, SASS_Bits::from_int(arg1)));
+            }
+            else {
+                throw std::runtime_error("Op_BAnd invalid arg types");
+            }
+        }, "&") {}
+    };
+    class Op_Or : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_Or() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Or", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_Or does not support SASS_Bits arguments");
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 || arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 || arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_Or does not support first arg FArgInt and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                throw std::runtime_error("Op_Or does not support first arg SASS_Bits and second arg FArgInt");
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_Or does not support first arg FArgBool and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                throw std::runtime_error("Op_Or does not support first arg SASS_Bits and second arg FArgBool");
+            }
+            else {
+                throw std::runtime_error("Op_Or invalid arg types");
+            }
+        }, "||") {}
+    };
+    class Op_BOr : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_BOr() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_BOr", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__or__(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 | arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 | arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_BOr does not support first arg FArgInt and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__or__(arg0, SASS_Bits::from_int(arg1)));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                throw std::runtime_error("Op_BOr does not support first arg FArgBool and second arg SASS_Bits");
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__or__(arg0, SASS_Bits::from_int(arg1)));
+            }
+            else {
+                throw std::runtime_error("Op_BOr invalid arg types");
+            }
+        }, "|") {}
+    };
+    class Op_Equal : public Op_DualOperator {
+    public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_Equal() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Equal", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__eq__sb(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(arg0 == arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(arg0 == arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__eq__i(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::__eq__i(arg0, arg1));
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs(SASS_Bits::__eq__b(arg1, arg0));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs(SASS_Bits::__eq__b(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_Equal invalid arg types");
+            }
+        }, "==") {}
+    };
+    class Op_Implication : public Op_DualOperator {
+        public:
+        // using TOperationVal = std::variant<std::monostate, FArgInt, FArgString, TT_AtOp, TT_Func, std::set<FArgString>, TT_Reg, TT_ICode, SASS_Bits>;
+        Op_Implication() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Implication", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs((!SASS_Bits::__bool__(arg0)) || SASS_Bits::__bool__(arg1));
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs((!arg0) || arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs((!arg0) || arg1);
+            }
+            else if(std::holds_alternative<FArgInt>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgInt arg0 = std::get<FArgInt>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs((!arg0) || SASS_Bits::__bool__(arg1));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs((!SASS_Bits::__bool__(arg0)) || arg1);
+            }
+            else if(std::holds_alternative<FArgBool>(val0) && std::holds_alternative<SASS_Bits>(val1)) {
+                FArgBool arg0 = std::get<FArgBool>(val0);
+                SASS_Bits arg1 = std::get<SASS_Bits>(val1);
+                return FArgs((!arg0) || SASS_Bits::__bool__(arg1));
+            }
+            else if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgBool>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgBool arg1 = std::get<FArgBool>(val1);
+                return FArgs((!SASS_Bits::__bool__(arg0)) || arg1);
+            }
+            else {
+                throw std::runtime_error("Op_Implication invalid arg types");
+            }
+        }, "->") {}
+    };
+    class Op_Assign : public Op_DualOperator {
+    public:
+        Op_Assign() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Void>(p)) throw std::runtime_error(err_msg("Op_Assign", "TOp_Void"));
+            return undefined(std::get<TOp_Void>(p));
+        }, "=") {}
+    };
+    class Op_Scale : public Op_DualOperator {
+    public:
+        Op_Scale() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Scale", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::scale(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_Scale requires first argument to be SASS_Bits or FArgInt and second argument to be FArgInt");
+            }
+        }, "SCALE") {}
+    };
+    class Op_Multiply : public Op_DualOperator {
+    public:
+        Op_Multiply() : Op_DualOperator([this](const VArg& p) {
+            if(!std::holds_alternative<TOp_Var_Var>(p)) throw std::runtime_error(err_msg("Op_Multiply", "TOp_Var_Var"));
+            TOp_Var_Var args = std::get<TOp_Var_Var>(p);
+            TOperationVal val0 = args.arg0;
+            TOperationVal val1 = args.arg1;
+            if(std::holds_alternative<SASS_Bits>(val0) && std::holds_alternative<FArgInt>(val1)) {
+                SASS_Bits arg0 = std::get<SASS_Bits>(val0);
+                FArgInt arg1 = std::get<FArgInt>(val1);
+                return FArgs(SASS_Bits::multiply(arg0, arg1));
+            }
+            else {
+                throw std::runtime_error("Op_Multiply requires first argument to be SASS_Bits or FArgInt and second argument to be FArgInt");
+            }
+        }, "MULTIPLY") {}
+    };
+
     class Op_Reduce : public Op_Function {
-        FUNC _reduce_op;
+        Op_DualOperator _reduce_op;
         // A=sp.EXPR_OP_ASSOCIATIV_GROUP_FUNCTION
         // P=sp.EXPR_OP_PRECEDENCE_NR_FUNCTION
         // def operation_reduce(self, args, enc_vals:dict) -> SASS_Bits|int|bool:
@@ -451,26 +1359,37 @@ namespace SASS {
             const std::vector<TOperationVal> arg0 = args.arg0;
             if(arg0.size() < 2)  throw std::runtime_error("TOp_List_EncVals in Op_Reduce needs at least two entries!");
             if(!std::holds_alternative<Op_DualOperator>(arg0.at(0))) throw std::runtime_error("TOp_List_EncVals  in Op_Reduce nees the first entry to be an Op_DualOperator!");
-            
+
             size_t index = 0;
             size_t len = arg0.size()-1;
-            for(size_t i=0; i<len; i+=2){
+            TOperationVal cur = std::get<TOperationVal>(arg0.at(0));
+            // cur must be one of FArgInt, FArgSASSBits
+            if(!std::holds_alternative<FArgInt>(cur) && !std::holds_alternative<FArgSASSBits>(cur)) throw std::runtime_error("TOp_List_EncVals in Op_Reduce needs the first entry to be FArgInt or FArgSASSBits!");
+            for(size_t i=1; i<len; i+=2){
                 TOperationVal p = arg0.at(i);
-                if(!std::holds_alternative<bool>(p)) throw std::runtime_error("TOp_List_EncVals in Op_convertFloatType needs booleans for 0, 2, 4, ... indices");
-                bool pp = std::get<bool>(p);
-                if(pp) {
-                    size_t xx = 2*i+1;
-                    if(!std::holds_alternative<SASS_Bits>(arg0.at(xx))) throw std::runtime_error("TOp_List_EncVals in Op_convertFloatType needs SASS_Bits for 1, 3, 5, ... indices");
-                    return std::get<SASS_Bits>(arg0.at(2*i+1));
-                }
+                auto res = _reduce_op.op(TOp_Var_Var(cur, p));
+                // res must be one of FArgInt, FArgSASSBits
+                if(!std::holds_alternative<FArgInt>(res) && !std::holds_alternative<FArgSASSBits>(res)) throw std::runtime_error("Op_Reduce requires the reduce_op to return FArgInt or FArgSASSBits!");
+                cur = std::get<TOperationVal>(res);
             }
+            // if cur holds FArgInt, convert it to FArgSASSBits with the same bit width as the first argument
+            if(std::holds_alternative<FArgInt>(cur)) {
+                FArgInt ival = std::get<FArgInt>(cur);
+                return FArgs(ival);
+            }
+            if(std::holds_alternative<FArgSASSBits>(cur)) {
+                FArgSASSBits sval = std::get<FArgSASSBits>(cur);
+                return FArgs(sval);
+            }
+
+            throw std::runtime_error("Op_Reduce failed to reduce the arguments with the given reduce_op!");
         }
         public:
             Op_Reduce() : Op_Function([this](const VArg& p) {
                 if(!std::holds_alternative<TOp_List_EncVals>(p)) throw std::runtime_error(err_msg("Op_Reduce", "TOp_List_EncVals"));
                 return operation_reduce(std::get<TOp_List_EncVals>(p));
-            }, FUNC::Reduce), _reduce_op(FUNC::) {}
-            void set_reduce(const FUNC op) { }
+            }, FUNC::Reduce), _reduce_op(Op_Plus()) {}
+            void set_reduce(const Op_DualOperator& op) { _reduce_op = op; }
     };
     class Op_Table : public Op_Function {};
     class Op_Identical : public Op_Function {};
@@ -487,29 +1406,7 @@ namespace SASS {
     class Op_BNot : public Op_UnaryOperator {};
     class Op_Defined : public Op_UnaryOperator {};
 
-    /// @brief Dual op token classes
-    class Op_Minus : public Op_DualOperator {};
-    class Op_Plus : public Op_DualOperator {};
-    class Op_Mult : public Op_DualOperator {};
-    class Op_Mod : public Op_DualOperator {};
-    class Op_Div : public Op_DualOperator {};
-    class Op_NotEqual : public Op_DualOperator {};
-    class Op_BXor : public Op_DualOperator {};
-    class Op_And : public Op_DualOperator {};
-    class Op_SmallerOrEqual : public Op_DualOperator {};
-    class Op_Smaller : public Op_DualOperator {};
-    class Op_GreaterOrEqual : public Op_DualOperator {};
-    class Op_Greater : public Op_DualOperator {};
-    class Op_LShift : public Op_DualOperator {};
-    class Op_RShift : public Op_DualOperator {};
-    class Op_BAnd : public Op_DualOperator {};
-    class Op_Or : public Op_DualOperator {};
-    class Op_BOr : public Op_DualOperator {};
-    class Op_Equal : public Op_DualOperator {};
-    class Op_Implication : public Op_DualOperator {};
-    class Op_Assign : public Op_DualOperator {};
-    class Op_Scale : public Op_DualOperator {};
-    class Op_Multiply : public Op_DualOperator {};
+
 
     
 }

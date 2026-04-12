@@ -1,0 +1,3 @@
+[submodule "/media/lol/M/repos/PySASS/10_Projects/06_PySASSExt/nanobind"]
+	path = /media/lol/M/repos/PySASS/10_Projects/06_PySASSExt/nanobind
+	url = https://github.com/wjakob/nanobind.git

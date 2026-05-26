@@ -681,6 +681,12 @@ class SASS_Op:
             elif val in self.specials.keys():
                 res.append(self.specials[val]()) # type: ignore
             elif val in tables.keys():
+                xt = set((type(x[0]).__name__, type(x[1]).__name__, tuple(sorted(xxx for xxx in set(type(xx).__name__ for xx in x[0])))) for x in list(tables[val].items()))
+                # if val == 'TABLES_mem_2' and len(xt) > 1:
+                #     pass
+                if not xt == {('tuple', 'int', ('int',))}:
+                    raise Exception("Expression evaluation: term {0} represents a table but its value is not of the expected type".format(val))
+                # sp.GLOBAL_TYPE_CHECK.append((val, xt))
                 res.append(Op_Table(val, tables[val], tables_inv[val])) # type: ignore
             elif val.startswith('$'): # type: ignore
                 vv = val[1:] # type: ignore

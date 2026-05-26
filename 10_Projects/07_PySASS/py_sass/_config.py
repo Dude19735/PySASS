@@ -37,6 +37,8 @@ while there are tokens on the operator stack:
     pop the operator from the operator stack onto the output queue
 """
 
+if not 'GLOBAL_TYPE_CHECK' in locals(): GLOBAL_TYPE_CHECK = []
+
 if not 'OPERATION_TYPES' in locals(): OPERATION_TYPES=set()
 
 if not 'CONST__OP_COLOR' in locals(): CONST__OP_COLOR='light_grey'
